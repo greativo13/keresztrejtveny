@@ -6,6 +6,13 @@ Magyar nyelvű keresztrejtvény-játék a böngészőben, telefonra optimalizál
 
 ## Funkciók
 
+- **Kalandtérkép:** témánként 15 pálya, a végén főnök-rejtvénnyel
+- **Animációk és hangok:** repülő ceruzák, kombó, konfetti, rázkódó hibás betűk, kikapcsolható hangok és rezgés
+- **Bolt:** rácsminták, betűtípusok, profilkeretek ceruzáért; új segítségek (magánhangzók, első betűk)
+- **Napi kihívások** és **szerencsekerék**
+- **Időfutam:** 3 perc, minél több szó
+- **Párbaj:** linkkel küldhető kihívás, a barát ugyanazt a rácsot kapja
+
 - **10 téma:** Vegyes, Történelem, Földrajz, Tudomány, Irodalom és művészet, Természet, Konyha és otthon, Sport, Film és zene, Szólások
 - **3 nehézség:** Könnyű, Közepes, Nehéz
 - **Több mint 1000 szó** (plusz 215 a svéd rejtvényhez); a játék megjegyzi a legutóbbi rejtvények szavait, és újakat választ
