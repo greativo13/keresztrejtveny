@@ -8,6 +8,7 @@ Magyar nyelvű keresztrejtvény-játék a böngészőben, telefonra optimalizál
 
 - **10 téma:** Vegyes, Történelem, Földrajz, Tudomány, Irodalom és művészet, Természet, Konyha és otthon, Sport, Film és zene, Szólások
 - **3 nehézség:** Könnyű, Közepes, Nehéz
+- **Több mint 1000 szó** (plusz 215 a svéd rejtvényhez); a játék megjegyzi a legutóbbi rejtvények szavait, és újakat választ
 - **Napi rejtvény:** minden nap mindenkinek ugyanaz a rács, napi sorozatszámlálóval
 - **Svéd rejtvény:** a rövid meghatározások a rácsban vannak, nyíl mutatja az irányt
 - **Ceruzák:** helyes szavakért, megfejtésért, napi rejtvényért és kitüntetésekért jár; ceruzáért betűt vagy szót lehet felfedni

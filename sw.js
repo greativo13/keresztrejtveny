@@ -1,5 +1,5 @@
 // Offline support: the game shell is served network-first (so updates arrive), fonts cache-first.
-const CACHE = "rejtvenyfuzet-v3";
+const CACHE = "rejtvenyfuzet-v4";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
