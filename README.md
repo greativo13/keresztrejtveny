@@ -1,19 +1,21 @@
 # Rejtvényfüzet
 
-Magyar nyelvű keresztrejtvény a böngészőben. Minden játéknál új rácsot rak össze.
+Magyar nyelvű keresztrejtvény a böngészőben, telefonra optimalizálva. Minden játékban új rácsot rak össze.
+
+**Játék:** https://greativo13.github.io/keresztrejtveny/
 
 ## Funkciók
 
-- Három nehézségi szint: Könnyű, Közepes, Nehéz (általános műveltség)
-- Klasszikus rács, számozott vízszintes és függőleges meghatározásokkal
-- **Ellenőrzés**: a jó betűk zöldek, a hibásak pirosak lesznek
-- **Betű felfedése** és **Szó felfedése** súgóként, valamint teljes megoldás
-- „Ékezet nélkül is elfogadja” kapcsoló
-- Óra, és szintenként mentett állás a böngészőben
-- Világos és sötét téma, telefonon is használható
+- 7 téma: Vegyes, Történelem, Földrajz, Tudomány, Irodalom és művészet, Természet, Konyha és otthon
+- 3 nehézség: Könnyű, Közepes, Nehéz
+- Beépített magyar billentyűzet telefonon (ékezetes sorral), nem ugrál a képernyő
+- Ellenőrzés (zöld jó / piros hibás), betű és szó felfedése, teljes megoldás
+- Csillagok (1–3) minden megfejtésért, szintlépés a csillagokkal
+- Félbehagyott rejtvény folytatása, „ékezet nélkül is elfogadja” kapcsoló
+- Világos, sötét vagy automatikus megjelenés
 
 ## Használat
 
-Nyisd meg az `index.html` fájlt bármelyik böngészőben. Nem kell hozzá telepítés.
+Nyisd meg az `index.html` fájlt bármelyik böngészőben, telepítés nem kell.
 
-Billentyűk: betű beírása, **Szóköz** = irányváltás, **Enter** = következő szó, nyilak = mozgás, **Backspace** = törlés.
+Számítógépen: gépelj a billentyűzeten, **Szóköz** = irányváltás, **Enter** = következő szó, nyilak = mozgás.
