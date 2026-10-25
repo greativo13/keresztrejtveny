@@ -513,7 +513,7 @@ function load(lv,fresh){
   if(!S.done) startTimer();
   tick();
   const first=P.words[0];
-  select(first.r,first.c,first.dir);
+  select(first.r,first.c,first.dir,true);
   save();
 }
 
@@ -532,12 +532,14 @@ function render(){
     d.className="cell";d.dataset.r=r;d.dataset.c=c;
     if(nums[r+","+c]){const s=document.createElement("span");s.className="num";s.textContent=nums[r+","+c];d.appendChild(s);}
     const i=document.createElement("input");
-    i.id="c"+r+"-"+c;i.type="text";i.maxLength=2;i.autocomplete="off";i.spellcheck=false;
+    i.id="c"+r+"-"+c;i.type="text";i.maxLength=2;i.inputMode="text";i.enterKeyHint="next";i.autocomplete="off";i.spellcheck=false;
     i.setAttribute("autocapitalize","characters");i.setAttribute("autocorrect","off");
     i.setAttribute("aria-label",`${r+1}. sor, ${c+1}. oszlop`);
     i.value=S.entries[r][c];
     i.addEventListener("focus",()=>{ if(!cur||cur.r!==r||cur.c!==c) select(r,c,cur?cur.dir:"a"); });
-    i.addEventListener("mousedown",e=>{ if(cur&&cur.r===r&&cur.c===c){e.preventDefault();toggleDir();} });
+    let wasActive=false;
+    i.addEventListener("pointerdown",()=>{ wasActive=document.activeElement===i&&cur&&cur.r===r&&cur.c===c; });
+    i.addEventListener("click",()=>{ if(wasActive) toggleDir(); wasActive=false; });
     i.addEventListener("keydown",onKey);
     i.addEventListener("input",onInput);
     d.appendChild(i);g.appendChild(d);inputs[r][c]=i;
@@ -561,12 +563,12 @@ function wordAt(r,c,dir){
 }
 function cellsOf(w){return w.letters.map((_,i)=>[w.r+(w.dir==="d"?i:0),w.c+(w.dir==="a"?i:0)]);}
 
-function select(r,c,dir){
+function select(r,c,dir,noFocus){
   if(!wordAt(r,c,dir)) dir=dir==="a"?"d":"a";
   cur={r,c,dir};
   highlight();
   const inp=inputs[r][c];
-  if(document.activeElement!==inp) inp.focus({preventScroll:true});
+  if(!noFocus&&document.activeElement!==inp) inp.focus({preventScroll:true});
 }
 function toggleDir(){
   const nd=cur.dir==="a"?"d":"a";
