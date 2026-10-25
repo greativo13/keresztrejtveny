@@ -1,0 +1,724 @@
+<title>Rejtvényfüzet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<style>
+/* Layout: puzzle-booklet page. Grid on the left, clue columns on the right; stacks on phones with the active clue pinned above the grid. */
+:root{
+  --bg:#E9EDF1;
+  --paper:#FFFFFF;
+  --ink:#18202B;
+  --muted:#5B6675;
+  --line:#2A3442;
+  --rule:#C9D1DA;
+  --pencil:#F2C21B;
+  --pencil-soft:#FBEDB4;
+  --pencil-ink:#3A2E00;
+  --good:#1D7A45;
+  --good-soft:#DDF1E4;
+  --bad:#C0352B;
+  --bad-soft:#FBE2DF;
+  --chip:#DCE2E9;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151B; --paper:#1B222C; --ink:#E7ECF2; --muted:#9AA6B5; --line:#7D8A9B; --rule:#2C3542;
+    --pencil:#E5B514; --pencil-soft:#3B3418; --pencil-ink:#1E1700;
+    --good:#5BCB8A; --good-soft:#163222; --bad:#FF7A6E; --bad-soft:#3A1C1A; --chip:#252E3A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151B; --paper:#1B222C; --ink:#E7ECF2; --muted:#9AA6B5; --line:#7D8A9B; --rule:#2C3542;
+  --pencil:#E5B514; --pencil-soft:#3B3418; --pencil-ink:#1E1700;
+  --good:#5BCB8A; --good-soft:#163222; --bad:#FF7A6E; --bad-soft:#3A1C1A; --chip:#252E3A;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:18px}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,5vw,44px);letter-spacing:-0.02em;line-height:1;margin:0}
+.brand h1 span{background:linear-gradient(transparent 58%, var(--pencil) 58%, var(--pencil) 90%, transparent 90%);padding:0 2px}
+.brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.levels{display:inline-flex;background:var(--chip);border-radius:999px;padding:3px}
+.levels button{font:600 14px/1 var(--f-body);border:0;background:transparent;color:var(--ink);padding:9px 14px;border-radius:999px;cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.timer{font-family:var(--f-display);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:right}
+.timer small{display:block;font:400 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:700 14px/1 var(--f-body);border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:10px 13px;cursor:pointer}
+.btn:hover{background:var(--chip)}
+.btn.primary{background:var(--pencil);border-color:var(--pencil);color:var(--pencil-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:var(--chip)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer;margin-left:auto}
+.toggle input{width:18px;height:18px;accent-color:var(--ink)}
+:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+
+.confirm,.status,.win{border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.confirm{background:var(--paper);border:1.5px solid var(--line)}
+.confirm p{margin:0;flex:1 1 220px}
+.status{background:var(--paper);border:1px solid var(--rule);font-size:15px}
+.status b{font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:700;font-size:14px}
+.pill.ok{background:var(--good-soft);color:var(--good)}
+.pill.no{background:var(--bad-soft);color:var(--bad)}
+.pill.em{background:var(--chip);color:var(--muted)}
+.win{background:var(--good-soft);color:var(--good);font-family:var(--f-display);font-weight:700;font-size:18px}
+.win span{font:400 15px var(--f-body);color:var(--ink)}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
+
+.board{background:var(--paper);border-radius:14px;padding:16px;display:grid;gap:14px;min-width:0}
+.cluebar{display:flex;gap:10px;align-items:baseline;background:var(--pencil-soft);border-radius:8px;padding:10px 12px;min-height:46px}
+.cluebar .tag{font-family:var(--f-display);font-weight:800;font-size:15px;white-space:nowrap}
+.cluebar .txt{min-width:0}
+.cluebar .len{color:var(--muted);font-size:13px;white-space:nowrap}
+.gridwrap{container-type:inline-size;overflow:hidden}
+.grid{--cell:min(44px, calc((100cqi - 4px) / var(--cols)));display:grid;grid-template-columns:repeat(var(--cols), var(--cell));grid-auto-rows:var(--cell);gap:1px;padding:1px;width:max-content;margin:0 auto}
+.cell{position:relative;background:var(--paper);box-shadow:0 0 0 1px var(--line)}
+.cell.void{background:transparent;box-shadow:none}
+.cell .num{position:absolute;top:1px;left:2px;font:700 calc(var(--cell) * .25)/1 var(--f-body);color:var(--muted);pointer-events:none;z-index:1}
+.cell input{position:absolute;inset:0;width:100%;height:100%;border:0;margin:0;padding:calc(var(--cell) * .12) 0 0;background:transparent;color:var(--ink);text-align:center;font:700 calc(var(--cell) * .54)/1 var(--f-display);text-transform:uppercase;caret-color:transparent;border-radius:0;cursor:pointer}
+.cell input:focus{outline:none}
+.cell.inword{background:var(--pencil-soft)}
+.cell.cur{background:var(--pencil)}
+.cell.cur input,.cell.cur .num{color:var(--pencil-ink)}
+.cell.ok input{color:var(--good)}
+.cell.bad{background:var(--bad-soft)}
+.cell.bad input{color:var(--bad)}
+.cell.bad.cur{background:var(--pencil)}
+.cell.bad.cur input{color:var(--bad)}
+.cell.rev::after{content:"";position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 calc(var(--cell) * .28) calc(var(--cell) * .28);border-color:transparent transparent var(--muted) transparent;pointer-events:none}
+.board.done .cell input{cursor:default}
+.hint{margin:0;color:var(--muted);font-size:13px}
+.hint kbd{font:700 12px var(--f-body);background:var(--chip);border-radius:4px;padding:1px 5px}
+
+.clues{display:grid;gap:18px;min-width:0}
+@media (max-width:900px) and (min-width:600px){.clues{grid-template-columns:1fr 1fr;align-items:start}}
+.clues section{background:var(--paper);border-radius:14px;padding:14px 8px 10px}
+.clues h2{font-family:var(--f-display);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin:0 8px 8px;color:var(--muted)}
+.clues ol{list-style:none;margin:0;padding:0}
+.clues li{display:grid;grid-template-columns:2.2em minmax(0,1fr);gap:4px;padding:6px 8px;border-radius:7px;cursor:pointer;font-size:15px}
+.clues li:hover{background:var(--chip)}
+.clues li.active{background:var(--pencil-soft)}
+.clues li.solved .c{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--rule)}
+.clues li b{font-family:var(--f-display);font-weight:800;font-variant-numeric:tabular-nums}
+.clues li .n{color:var(--muted);font-size:12px;white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){
+  .win{animation:pop .35s ease-out}
+  @keyframes pop{from{transform:scale(.97);opacity:.4}to{transform:none;opacity:1}}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1><span>Rejtvényfüzet</span></h1>
+      <p>Klasszikus keresztrejtvény, minden játéknál új rácsot rakunk össze.</p>
+    </div>
+    <div class="meta">
+      <div class="levels" role="group" aria-label="Nehézség">
+        <button type="button" data-level="konnyu" aria-pressed="true">Könnyű</button>
+        <button type="button" data-level="kozepes" aria-pressed="false">Közepes</button>
+        <button type="button" data-level="nehez" aria-pressed="false">Nehéz</button>
+      </div>
+      <div class="timer" aria-live="off"><small>Idő</small><span id="clock">0:00</span></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" class="btn primary" id="btn-check">Ellenőrzés</button>
+    <button type="button" class="btn" id="btn-letter">Betű felfedése</button>
+    <button type="button" class="btn" id="btn-word">Szó felfedése</button>
+    <button type="button" class="btn ghost" id="btn-solve">Megoldás</button>
+    <button type="button" class="btn ghost" id="btn-new">Új rejtvény</button>
+    <label class="toggle" for="lenient"><input type="checkbox" id="lenient"> Ékezet nélkül is elfogadja</label>
+  </div>
+
+  <div class="confirm" id="confirm" hidden>
+    <p id="confirm-text"></p>
+    <button type="button" class="btn primary" id="confirm-yes">Igen</button>
+    <button type="button" class="btn" id="confirm-no">Mégse</button>
+  </div>
+  <div class="status" id="status" hidden></div>
+  <div class="win" id="win" hidden></div>
+
+  <main>
+    <div class="board" id="board">
+      <div class="cluebar" id="cluebar"><span class="tag" id="cb-tag"></span><span class="txt" id="cb-txt"></span><span class="len" id="cb-len"></span></div>
+      <div class="gridwrap"><div class="grid" id="grid"></div></div>
+      <p class="hint">Kattints egy kockára, és írd be a betűt. <kbd>Szóköz</kbd> vagy újabb kattintás: irányváltás · <kbd>Enter</kbd>: következő szó · nyilak: mozgás. Minden betű egy kocka, a CS, SZ, GY is két kocka.</p>
+    </div>
+    <div class="clues">
+      <section><h2>Vízszintes</h2><ol id="list-a"></ol></section>
+      <section><h2>Függőleges</h2><ol id="list-d"></ol></section>
+    </div>
+  </main>
+</div>
+
+<script id="engine">
+const WORDS = {
+konnyu: `ALMA|Piros vagy zöld gyümölcs, rétes is készül belőle
+KUTYA|Az ember legjobb barátja
+MACSKA|Dorombolva egérre vadászó háziállat
+ASZTAL|Bútor, amelyhez leülünk enni
+KENYÉR|Pékáru, a mindennapi betevő
+TEJ|Fehér ital, a tehén adja
+VÍZ|Kémiai képlete H₂O
+NAP|A mi csillagunk
+HOLD|A Föld kísérője az éjszakai égen
+TENGER|Nagy, sós vizű terület
+ERDŐ|Sok fa együtt
+VIRÁG|Kertben nyílik, csokorba kötik
+ISKOLA|Itt tanulnak a gyerekek
+KÖNYV|Lapokból álló olvasnivaló
+CERUZA|Grafitbelű íróeszköz, radírral törölhető
+AUTÓ|Négykerekű, motoros jármű
+VONAT|Síneken haladó jármű
+REPÜLŐ|Szárnyas légi jármű
+HÁZ|Lakóépület
+ABLAK|Üvegezett nyílás a falon
+AJTÓ|Ezen lépünk be a szobába
+TÉL|A leghidegebb évszak
+NYÁR|A legmelegebb évszak
+TAVASZ|Ilyenkor nyílnak az első hóvirágok
+ŐSZ|Ilyenkor hullanak le a falevelek
+HÉTFŐ|A hét első napja
+VASÁRNAP|A hét utolsó napja
+PIROS|A paradicsom színe
+SÁRGA|A citrom színe
+ZÖLD|A fű színe
+KÉK|A derült ég színe
+FEHÉR|A friss hó színe
+FEKETE|A korom színe
+OROSZLÁN|Az állatok királya
+ELEFÁNT|Ormányos óriás
+ZSIRÁF|A leghosszabb nyakú állat
+TEHÉN|Tejet adó, kérődző háziállat
+NYÚL|Hosszú fülű, répát rágcsál
+MÉH|Mézet gyűjtő rovar
+SZEM|Ezzel látunk
+FÜL|Ezzel hallunk
+ORR|Ezzel szagolunk
+KÉZ|Öt ujj van rajta
+LÁB|Ezen járunk
+ÓRA|Az időt mutatja
+TÜKÖR|Belenézve önmagunkat látjuk
+LABDA|Gömb alakú játékszer
+BICIKLI|Kétkerekű, pedállal hajtott jármű
+ESŐ|A felhőkből hulló víz
+SZIVÁRVÁNY|Eső után hét színben ragyog az égen
+BUDAPEST|Magyarország fővárosa
+DUNA|Budapesten átfolyó nagy folyó
+BALATON|A „magyar tenger”
+TISZA|Szegeden átfolyó folyó
+PARADICSOM|Piros zöldség, a ketchup alapanyaga
+UBORKA|Zöld zöldség, savanyítva is esszük
+KRUMPLI|A burgonya másik neve
+SAJT|Tejből készül, lehet lyukas is
+LEVES|Az ebéd első fogása, kanállal esszük
+TOJÁS|A tyúk tojja
+MÉZ|A méhek édes terméke
+CUKOR|Kristályos édesítőszer
+ORVOS|Betegeket gyógyító szakember
+TANÁR|Az iskolában tanít
+SZAKÁCS|Az étteremben ő főz
+ZONGORA|Fekete-fehér billentyűs hangszer
+GITÁR|Hathúros pengetős hangszer
+DOB|Ütőhangszer, verővel szólaltatják meg
+PINGVIN|Nem tud repülni, de remekül úszik
+BÉKA|Brekegő kétéltű
+CSIGA|A házát a hátán hordja
+HAL|Kopoltyúval lélegzik
+MADÁR|Tollas, szárnyas állat`,
+kozepes: `PETŐFI|A Nemzeti dal költője (Sándor)
+ARANY|A Toldi szerzője (János)
+JÓKAI|Az arany ember írója (Mór)
+LISZT|A Magyar rapszódiák zeneszerzője (Ferenc)
+BARTÓK|A kékszakállú herceg vára zeneszerzője (Béla)
+KODÁLY|A Háry János zeneszerzője (Zoltán)
+SEMMELWEIS|Az anyák megmentője (Ignác)
+SZÉCHENYI|A legnagyobb magyar (István)
+MÁTYÁS|Az igazságos király
+ISTVÁN|Első királyunk
+MOHÁCS|Az 1526-os vesztes csata helyszíne
+ESZTERGOM|Bazilikájáról híres Duna-parti város
+DEBRECEN|A cívisváros
+SZEGED|A napfény városa a Tisza partján
+PÉCS|Zsolnay-negyedéről híres mecseki város
+EGER|Dobó István vára 1552-ben
+HORTOBÁGY|Puszta a kilenclyukú híddal
+PARLAMENT|Az Országház más néven
+GULYÁS|Paprikás magyar leves, bográcsban is főzik
+LÁNGOS|Olajban sült tészta tejföllel, sajttal
+DOBOS|Karamelltetejű torta
+TOKAJ|Aszújáról híres borvidék
+PAPRIKA|Kalocsai és szegedi fűszer
+OXIGÉN|Az O vegyjelű elem
+HIDROGÉN|A legkönnyebb kémiai elem
+VAS|Az Fe vegyjelű fém
+EZÜST|Az Ag vegyjelű nemesfém
+MARS|A vörös bolygó
+VÉNUSZ|A Naptól számított második bolygó
+JUPITER|A Naprendszer legnagyobb bolygója
+SZATURNUSZ|Gyűrűiről híres bolygó
+EVEREST|A Föld legmagasabb hegye
+AMAZONAS|Dél-Amerika óriási folyója
+NÍLUS|Egyiptomon átfolyó folyó
+SZAHARA|A legnagyobb forró sivatag
+ALPOK|A Mont Blanc hegysége
+PÁRIZS|Az Eiffel-torony városa
+RÓMA|Az örök város
+LONDON|A Big Ben városa
+BÉCS|Ausztria fővárosa
+PRÁGA|Csehország fővárosa
+VARSÓ|Lengyelország fővárosa
+ATHÉN|Görögország fővárosa
+MADRID|Spanyolország fővárosa
+TOKIÓ|Japán fővárosa
+KAIRÓ|Egyiptom fővárosa
+PIRAMIS|Egyiptomi fáraósír
+NAPÓLEON|Waterloonál legyőzött francia császár
+KOLUMBUSZ|1492-ben Amerikába ért hajós
+EINSTEIN|A relativitáselmélet megalkotója
+NEWTON|A gravitáció törvényének felfedezője
+MOZART|A varázsfuvola zeneszerzője
+SHAKESPEARE|A Hamlet szerzője
+HÁROMSZÖG|Három oldalú síkidom
+PRÍMSZÁM|Csak 1-gyel és önmagával osztható szám
+DELFIN|Okos, tengeri emlős
+BÁLNA|A kék változata a legnagyobb állat
+KENGURU|Ausztráliai erszényes ugró
+PANDA|Bambuszevő fekete-fehér medve
+PUSKÁS|Az Aranycsapat legendás csatára (Ferenc)
+OLIMPIA|Négyévente rendezett sportesemény
+SAKK|Táblajáték királlyal és vezérrel
+RUBIK|A bűvös kocka feltalálója (Ernő)
+GOLYÓSTOLL|Bíró László találmánya
+HELIKOPTER|Forgószárnyas légi jármű
+SZONETT|Tizennégy soros versforma
+REGÉNY|Hosszú prózai mű
+ÓCEÁN|Az Atlanti vagy a Csendes
+KONTINENS|Földrész
+EGYENLÍTŐ|A Földet két féltekére osztó kör`,
+nehez: `MADÁCH|Az ember tragédiája szerzője (Imre)
+VÖRÖSMARTY|A Szózat költője (Mihály)
+KÖLCSEY|A Himnusz költője (Ferenc)
+ERKEL|A Himnusz zeneszerzője (Ferenc)
+ADY|A Léda-versek költője (Endre)
+JÓZSEF|A Mama és az Óda költője (… Attila)
+KARINTHY|Az Így írtok ti szerzője (Frigyes)
+MÓRICZ|A Légy jó mindhalálig írója (Zsigmond)
+GÁRDONYI|Az Egri csillagok írója (Géza)
+MIKSZÁTH|A Szent Péter esernyője írója (Kálmán)
+KERTÉSZ|A Sorstalanság Nobel-díjas írója (Imre)
+SZENTGYÖRGYI|C-vitamin-kutatásaiért Nobel-díjas (Albert)
+NEUMANN|A modern számítógép egyik atyja (János)
+EÖTVÖS|Torziós ingájáról híres fizikus (Loránd)
+GUTENBERG|A könyvnyomtatás feltalálója
+KOPERNIKUSZ|A heliocentrikus világkép megalkotója
+GALILEI|„És mégis mozog a Föld!” (Galileo)
+DARWIN|A fajok eredete szerzője
+MENGYELEJEV|A periódusos rendszer megalkotója
+CURIE|Kétszeres Nobel-díjas tudósnő (Marie)
+PLATÓN|Az Állam szerzője, Szókratész tanítványa
+ARISZTOTELÉSZ|Nagy Sándor nevelője
+HOMÉROSZ|Az Iliász szerzője
+DANTE|Az Isteni színjáték szerzője
+CERVANTES|A Don Quijote írója
+TOLSZTOJ|A Háború és béke írója
+REMBRANDT|Az Éjjeli őrjárat festője
+MICHELANGELO|A Sixtus-kápolna mennyezetfreskójának festője
+MUNKÁCSY|A Krisztus Pilátus előtt festője (Mihály)
+CSONTVÁRY|A Magányos cédrus festője (Tivadar)
+VERDI|Az Aida zeneszerzője
+WAGNER|A Nibelung gyűrűje zeneszerzője
+CHOPIN|„A zongora költője”, lengyel zeneszerző
+SZIGETVÁR|Zrínyi Miklós hősi halálának helye (1566)
+TRIANON|Az 1920-as békeszerződés helye
+VILÁGOS|Az 1849-es fegyverletétel helye
+ÁRPÁD|A honfoglaló fejedelem
+KOPPÁNY|István ellen lázadó somogyi vezér
+RÁKÓCZI|Az 1703–11-es szabadságharc vezérlő fejedelme (Ferenc)
+HUNYADI|A nándorfehérvári diadal hőse (János)
+KOSSUTH|A turini remete (Lajos)
+DEÁK|A haza bölcse (Ferenc)
+ULÁNBÁTOR|Mongólia fővárosa
+CANBERRA|Ausztrália fővárosa
+OTTAWA|Kanada fővárosa
+LIMA|Peru fővárosa
+NAIROBI|Kenya fővárosa
+HELSINKI|Finnország fővárosa
+KILIMANDZSÁRÓ|Afrika legmagasabb hegye
+BAJKÁL|A Föld legmélyebb tava
+KASPI|A legnagyobb tó: …-tenger
+MISSISSIPPI|Tom Sawyer és Huckleberry Finn folyója
+ARGON|Ar vegyjelű nemesgáz
+VOLFRÁM|Az izzószálak W vegyjelű féme
+HIGANY|Szobahőmérsékleten folyékony fém
+FOTOSZINTÉZIS|A növények fényenergiát hasznosító folyamata
+MITOKONDRIUM|A sejt „erőműve”
+HEMOGLOBIN|Oxigént szállító vérfehérje
+INZULIN|A vércukorszintet csökkentő hormon
+HIPOTENÚZA|A derékszöggel szemközti oldal
+LOGARITMUS|A hatványozás egyik megfordítása
+SZONÁTA|Többtételes hangszeres zenemű
+ALLITERÁCIÓ|Szókezdő hangok ismétlődése
+HEXAMETER|Az ókori eposzok hat verslábas sora`
+};
+const LEVELS = {
+  konnyu:{name:"Könnyű", size:11, target:10},
+  kozepes:{name:"Közepes", size:13, target:13},
+  nehez:{name:"Nehéz", size:15, target:14}
+};
+function parseWords(level){
+  return WORDS[level].split("\n").map(l=>{const [w,c]=l.split("|");return {word:w.trim(),clue:c.trim()};});
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildOnce(pool,size,target){
+  const cells=new Map(); // "r,c" -> {ch,a,d}
+  const placed=[];
+  let b=null; // bounds
+  const key=(r,c)=>r+","+c;
+  const get=(r,c)=>cells.get(key(r,c));
+  function fits(letters,r,c,dir){
+    const dr=dir==="d"?1:0, dc=dir==="a"?1:0, n=letters.length;
+    if(get(r-dr,c-dc)||get(r+dr*n,c+dc*n)) return -1;
+    let cross=0;
+    for(let i=0;i<n;i++){
+      const rr=r+dr*i, cc=c+dc*i, ex=get(rr,cc);
+      if(ex){ if(ex.ch!==letters[i]||ex[dir]) return -1; cross++; }
+      else if(get(rr+dc,cc+dr)||get(rr-dc,cc-dr)) return -1;
+    }
+    if(b){
+      const minR=Math.min(b.minR,r), maxR=Math.max(b.maxR,r+dr*(n-1));
+      const minC=Math.min(b.minC,c), maxC=Math.max(b.maxC,c+dc*(n-1));
+      if(maxR-minR+1>size||maxC-minC+1>size) return -1;
+    }
+    return cross;
+  }
+  function put(item,letters,r,c,dir){
+    const dr=dir==="d"?1:0, dc=dir==="a"?1:0;
+    letters.forEach((ch,i)=>{const k=key(r+dr*i,c+dc*i);const ex=cells.get(k)||{ch,a:false,d:false};ex[dir]=true;cells.set(k,ex);});
+    const er=r+dr*(letters.length-1), ec=c+dc*(letters.length-1);
+    b=b?{minR:Math.min(b.minR,r),maxR:Math.max(b.maxR,er),minC:Math.min(b.minC,c),maxC:Math.max(b.maxC,ec)}:{minR:r,maxR:er,minC:c,maxC:ec};
+    placed.push({word:item.word,clue:item.clue,letters,r,c,dir});
+  }
+  const order=shuffle(pool);
+  const head=order.slice(0,12).sort((x,y)=>Array.from(y.word).length-Array.from(x.word).length)[0];
+  put(head,Array.from(head.word),0,0,Math.random()<.5?"a":"d");
+  const rest=order.filter(w=>w!==head);
+  let crossings=0;
+  for(let pass=0;pass<2&&placed.length<target;pass++){
+    for(const item of rest){
+      if(placed.length>=target) break;
+      if(placed.some(p=>p.word===item.word)) continue;
+      const L=Array.from(item.word);
+      let best=[],bestX=0;
+      for(const [k,cell] of cells){
+        const [r,c]=k.split(",").map(Number);
+        for(let i=0;i<L.length;i++){
+          if(L[i]!==cell.ch) continue;
+          for(const dir of ["a","d"]){
+            if(cell[dir]) continue;
+            const sr=dir==="d"?r-i:r, sc=dir==="a"?c-i:c;
+            const x=fits(L,sr,sc,dir);
+            if(x<1) continue;
+            if(x>bestX){bestX=x;best=[[sr,sc,dir]];}
+            else if(x===bestX) best.push([sr,sc,dir]);
+          }
+        }
+      }
+      if(best.length){const [r,c,dir]=best[Math.floor(Math.random()*best.length)];put(item,L,r,c,dir);crossings+=bestX;}
+    }
+  }
+  const w=b.maxC-b.minC+1, h=b.maxR-b.minR+1;
+  placed.forEach(p=>{p.r-=b.minR;p.c-=b.minC;});
+  return {w,h,words:placed,score:placed.length*100+crossings*12-(w*h)*0.4+Math.min(w,h)*2};
+}
+
+function generate(level){
+  const cfg=LEVELS[level];
+  const pool=parseWords(level).filter(x=>{const n=Array.from(x.word).length;return n>=3&&n<=cfg.size;});
+  let best=null;
+  for(let t=0;t<40;t++){const g=buildOnce(pool,cfg.size,cfg.target);if(!best||g.score>best.score)best=g;}
+  // numbering in reading order
+  const starts=new Map();
+  best.words.forEach(wd=>{const k=wd.r*1000+wd.c;if(!starts.has(k))starts.set(k,[]);starts.get(k).push(wd);});
+  let n=1;
+  [...starts.keys()].sort((a,b)=>a-b).forEach(k=>{starts.get(k).forEach(wd=>wd.num=n);n++;});
+  best.words.sort((a,b)=>a.num-b.num);
+  return {w:best.w,h:best.h,words:best.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))};
+}
+if(typeof module!=="undefined") module.exports={generate,LEVELS,parseWords};
+</script>
+
+<script>
+(function(){
+const $=s=>document.getElementById(s);
+const STORE="rejtvenyfuzet:v1:";
+const store={
+  get(k){try{const v=localStorage.getItem(STORE+k);return v?JSON.parse(v):null;}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(STORE+k,JSON.stringify(v));}catch(e){}}
+};
+const FOLD={"Á":"A","É":"E","Í":"I","Ó":"O","Ö":"O","Ő":"O","Ú":"U","Ü":"U","Ű":"U"};
+const fold=ch=>FOLD[ch]||ch;
+
+let level="konnyu", P=null, S=null, cur=null, timerId=null, inputs=[], pendingConfirm=null;
+let lenient=!!store.get("lenient");
+$("lenient").checked=lenient;
+
+function newState(){
+  const sol=Array.from({length:P.h},()=>Array(P.w).fill(null));
+  P.words.forEach(w=>w.letters.forEach((ch,i)=>{sol[w.r+(w.dir==="d"?i:0)][w.c+(w.dir==="a"?i:0)]=ch;}));
+  P.sol=sol;
+  return {entries:Array.from({length:P.h},()=>Array(P.w).fill("")),rev:{},marks:{},elapsed:0,done:false,gaveUp:false,hints:0};
+}
+function attachSol(){
+  const sol=Array.from({length:P.h},()=>Array(P.w).fill(null));
+  P.words.forEach(w=>w.letters.forEach((ch,i)=>{sol[w.r+(w.dir==="d"?i:0)][w.c+(w.dir==="a"?i:0)]=ch;}));
+  P.sol=sol;
+}
+function save(){
+  if(!P||!S) return;
+  const e=elapsed(); S.elapsed=e; S._base=e; if(runStart) runStart=Date.now();
+  const copy=Object.assign({},S); delete copy._base;
+  store.set(level,{P:{w:P.w,h:P.h,words:P.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))},S:copy});
+}
+let runStart=0;
+function elapsed(){ return S.done? S.elapsed : (S._base||0)+(runStart?Math.floor((Date.now()-runStart)/1000):0); }
+
+function load(lv,fresh){
+  stopTimer();
+  level=lv;
+  document.querySelectorAll(".levels button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.level===lv));
+  const saved=fresh?null:store.get(lv);
+  if(saved&&saved.P&&saved.S){P=saved.P;attachSol();S=saved.S;}
+  else{P=generate(lv);S=newState();}
+  S._base=S.elapsed||0;
+  render();
+  hide("status");hide("confirm");
+  if(S.done) showWin(); else hide("win");
+  if(!S.done) startTimer();
+  tick();
+  const first=P.words[0];
+  select(first.r,first.c,first.dir);
+  save();
+}
+
+function startTimer(){runStart=Date.now();timerId=setInterval(tick,1000);}
+function stopTimer(){ if(timerId){clearInterval(timerId);timerId=null;} if(S&&!S.done){S._base=elapsed();} runStart=0; }
+function fmt(s){const m=Math.floor(s/60),x=s%60;return m+":"+String(x).padStart(2,"0");}
+function tick(){$("clock").textContent=fmt(elapsed());}
+
+function render(){
+  const g=$("grid");g.innerHTML="";g.style.setProperty("--cols",P.w);
+  inputs=Array.from({length:P.h},()=>Array(P.w).fill(null));
+  const nums={};P.words.forEach(w=>nums[w.r+","+w.c]=w.num);
+  for(let r=0;r<P.h;r++)for(let c=0;c<P.w;c++){
+    const d=document.createElement("div");
+    if(!P.sol[r][c]){d.className="cell void";g.appendChild(d);continue;}
+    d.className="cell";d.dataset.r=r;d.dataset.c=c;
+    if(nums[r+","+c]){const s=document.createElement("span");s.className="num";s.textContent=nums[r+","+c];d.appendChild(s);}
+    const i=document.createElement("input");
+    i.id="c"+r+"-"+c;i.type="text";i.maxLength=2;i.autocomplete="off";i.spellcheck=false;
+    i.setAttribute("autocapitalize","characters");i.setAttribute("autocorrect","off");
+    i.setAttribute("aria-label",`${r+1}. sor, ${c+1}. oszlop`);
+    i.value=S.entries[r][c];
+    i.addEventListener("focus",()=>{ if(!cur||cur.r!==r||cur.c!==c) select(r,c,cur?cur.dir:"a"); });
+    i.addEventListener("mousedown",e=>{ if(cur&&cur.r===r&&cur.c===c){e.preventDefault();toggleDir();} });
+    i.addEventListener("keydown",onKey);
+    i.addEventListener("input",onInput);
+    d.appendChild(i);g.appendChild(d);inputs[r][c]=i;
+  }
+  for(const dir of ["a","d"]){
+    const ol=$("list-"+dir);ol.innerHTML="";
+    P.words.filter(w=>w.dir===dir).forEach(w=>{
+      const li=document.createElement("li");li.dataset.num=w.num;li.dataset.dir=dir;
+      li.innerHTML=`<b>${w.num}.</b><span class="c">${esc(w.clue)} <span class="n">(${w.letters.length})</span></span>`;
+      li.addEventListener("click",()=>{select(w.r,w.c,dir);});
+      ol.appendChild(li);w.li=li;
+    });
+  }
+  paintMarks();
+  $("board").classList.toggle("done",!!S.done);
+}
+function esc(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+
+function wordAt(r,c,dir){
+  return P.words.find(w=>w.dir===dir&&(dir==="a"?(w.r===r&&c>=w.c&&c<w.c+w.letters.length):(w.c===c&&r>=w.r&&r<w.r+w.letters.length)));
+}
+function cellsOf(w){return w.letters.map((_,i)=>[w.r+(w.dir==="d"?i:0),w.c+(w.dir==="a"?i:0)]);}
+
+function select(r,c,dir){
+  if(!wordAt(r,c,dir)) dir=dir==="a"?"d":"a";
+  cur={r,c,dir};
+  highlight();
+  const inp=inputs[r][c];
+  if(document.activeElement!==inp) inp.focus({preventScroll:true});
+}
+function toggleDir(){
+  const nd=cur.dir==="a"?"d":"a";
+  if(wordAt(cur.r,cur.c,nd)){cur.dir=nd;highlight();}
+}
+function highlight(){
+  document.querySelectorAll(".cell.inword,.cell.cur").forEach(e=>e.classList.remove("inword","cur"));
+  document.querySelectorAll(".clues li.active").forEach(e=>e.classList.remove("active"));
+  const w=wordAt(cur.r,cur.c,cur.dir);
+  if(w){
+    cellsOf(w).forEach(([r,c])=>inputs[r][c].parentNode.classList.add("inword"));
+    w.li.classList.add("active");
+    $("cb-tag").textContent=`${w.num}. ${w.dir==="a"?"vízszintes":"függőleges"}`;
+    $("cb-txt").textContent=w.clue;
+    $("cb-len").textContent=`(${w.letters.length} kocka)`;
+    if(window.matchMedia("(min-width:901px)").matches) w.li.scrollIntoView({block:"nearest"});
+  }
+  inputs[cur.r][cur.c].parentNode.classList.add("cur");
+}
+
+function setCell(r,c,v){
+  S.entries[r][c]=v;inputs[r][c].value=v;
+  delete S.marks[r+","+c];
+  inputs[r][c].parentNode.classList.remove("ok","bad");
+}
+function step(dr,dc){
+  let r=cur.r+dr,c=cur.c+dc;
+  while(r>=0&&r<P.h&&c>=0&&c<P.w){ if(P.sol[r][c]){select(r,c,cur.dir);return true;} r+=dr;c+=dc; }
+  return false;
+}
+function advance(back){
+  const w=wordAt(cur.r,cur.c,cur.dir);if(!w)return;
+  const cs=cellsOf(w), idx=cs.findIndex(([r,c])=>r===cur.r&&c===cur.c);
+  const ni=idx+(back?-1:1);
+  if(ni>=0&&ni<cs.length) select(cs[ni][0],cs[ni][1],cur.dir);
+}
+function nextWord(back){
+  const order=[...P.words.filter(w=>w.dir==="a"),...P.words.filter(w=>w.dir==="d")];
+  const w=wordAt(cur.r,cur.c,cur.dir);
+  let i=order.indexOf(w);i=(i+(back?-1:1)+order.length)%order.length;
+  const nw=order[i];
+  const empty=cellsOf(nw).find(([r,c])=>!S.entries[r][c]);
+  const [r,c]=empty||[nw.r,nw.c];
+  select(r,c,nw.dir);
+}
+function onKey(e){
+  if(S.done&&!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Tab","Enter"].includes(e.key)){ if(e.key.length===1||e.key==="Backspace"||e.key==="Delete") e.preventDefault(); return; }
+  const k=e.key;
+  if(k==="ArrowRight"||k==="ArrowLeft"){e.preventDefault(); if(cur.dir!=="a"&&wordAt(cur.r,cur.c,"a")){cur.dir="a";highlight();} else step(0,k==="ArrowRight"?1:-1);}
+  else if(k==="ArrowDown"||k==="ArrowUp"){e.preventDefault(); if(cur.dir!=="d"&&wordAt(cur.r,cur.c,"d")){cur.dir="d";highlight();} else step(k==="ArrowDown"?1:-1,0);}
+  else if(k===" "){e.preventDefault();toggleDir();}
+  else if(k==="Enter"||k==="Tab"){e.preventDefault();nextWord(e.shiftKey);}
+  else if(k==="Backspace"){
+    e.preventDefault();
+    if(S.entries[cur.r][cur.c]&&!S.rev[cur.r+","+cur.c]){setCell(cur.r,cur.c,"");changed();}
+    else{advance(true); if(!S.rev[cur.r+","+cur.c]){setCell(cur.r,cur.c,"");changed();}}
+  }
+  else if(k==="Delete"){e.preventDefault(); if(!S.rev[cur.r+","+cur.c]){setCell(cur.r,cur.c,"");changed();}}
+}
+function onInput(e){
+  const i=e.target, r=+i.parentNode.dataset.r, c=+i.parentNode.dataset.c;
+  if(S.done||S.rev[r+","+c]){i.value=S.entries[r][c];return;}
+  const chars=Array.from(i.value.toLocaleUpperCase("hu")).filter(ch=>/\p{L}/u.test(ch));
+  const ch=chars.length?chars[chars.length-1]:"";
+  setCell(r,c,ch);
+  changed();
+  if(ch) advance(false);
+}
+
+function matches(r,c){
+  const v=S.entries[r][c], s=P.sol[r][c];
+  return v&&(v===s||(lenient&&fold(v)===fold(s)));
+}
+function allCells(){const out=[];for(let r=0;r<P.h;r++)for(let c=0;c<P.w;c++)if(P.sol[r][c])out.push([r,c]);return out;}
+function changed(){
+  hide("status");
+  markSolvedClues();
+  const cs=allCells();
+  if(!S.done&&cs.every(([r,c])=>matches(r,c))){finish(false);return;}
+  save();
+}
+function markSolvedClues(){
+  P.words.forEach(w=>w.li.classList.toggle("solved",cellsOf(w).every(([r,c])=>matches(r,c))&&S.done));
+}
+function paintMarks(){
+  allCells().forEach(([r,c])=>{
+    const cl=inputs[r][c].parentNode.classList, m=S.marks[r+","+c];
+    cl.toggle("ok",m==="ok");cl.toggle("bad",m==="bad");cl.toggle("rev",!!S.rev[r+","+c]);
+  });
+}
+function check(){
+  let ok=0,bad=0,em=0;
+  allCells().forEach(([r,c])=>{
+    const k=r+","+c;
+    if(!S.entries[r][c]){em++;delete S.marks[k];}
+    else if(matches(r,c)){ok++;S.marks[k]="ok";}
+    else{bad++;S.marks[k]="bad";}
+  });
+  paintMarks();
+  if(!bad&&!em&&!S.done){finish(false);return;}
+  const st=$("status");
+  st.innerHTML=`<span class="pill ok">${ok} jó</span><span class="pill no">${bad} hibás</span><span class="pill em">${em} üres</span>`+
+    (bad?`<span>A piros betűket érdemes újragondolni.</span>`:em?`<span>Eddig minden stimmel, folytasd!</span>`:"");
+  st.hidden=false;
+  save();
+}
+function reveal(cells){
+  if(S.done) return;
+  let n=0;
+  cells.forEach(([r,c])=>{
+    if(matches(r,c)&&S.entries[r][c]===P.sol[r][c]) return;
+    setCell(r,c,P.sol[r][c]);S.rev[r+","+c]=true;n++;
+  });
+  if(n)S.hints+=n;
+  paintMarks();changed();
+}
+function finish(gaveUp){
+  S.elapsed=elapsed();S._base=S.elapsed;S.done=true;S.gaveUp=gaveUp;
+  stopTimer();tick();
+  allCells().forEach(([r,c])=>{ if(!gaveUp) S.marks[r+","+c]="ok"; });
+  paintMarks();markSolvedClues();
+  $("board").classList.add("done");
+  hide("status");showWin();save();
+}
+function showWin(){
+  const w=$("win");
+  if(S.gaveUp){
+    w.innerHTML=`Itt a megoldás. <span>Nézd át nyugodtan, aztán jöhet egy új rejtvény.</span><button type="button" class="btn primary" id="win-new">Új rejtvény</button>`;
+  }else{
+    w.innerHTML=`Megfejtetted! <span>${fmt(S.elapsed)} alatt${S.hints?`, ${S.hints} felfedett betűvel`:", segítség nélkül"}.</span><button type="button" class="btn primary" id="win-new">Új rejtvény</button>`;
+  }
+  w.hidden=false;
+  $("win-new").onclick=()=>load(level,true);
+}
+function hide(id){$(id).hidden=true;}
+function ask(text,fn){
+  $("confirm-text").textContent=text;pendingConfirm=fn;$("confirm").hidden=false;$("confirm-yes").focus();
+}
+$("confirm-yes").onclick=()=>{hide("confirm");const f=pendingConfirm;pendingConfirm=null;f&&f();};
+$("confirm-no").onclick=()=>{hide("confirm");pendingConfirm=null;if(cur)inputs[cur.r][cur.c].focus();};
+
+$("btn-check").onclick=check;
+$("btn-letter").onclick=()=>{if(cur)reveal([[cur.r,cur.c]]);if(cur)inputs[cur.r][cur.c].focus();};
+$("btn-word").onclick=()=>{const w=cur&&wordAt(cur.r,cur.c,cur.dir);if(w)reveal(cellsOf(w));if(cur)inputs[cur.r][cur.c].focus();};
+$("btn-solve").onclick=()=>{ if(S.done)return; ask("Biztosan megnézed a teljes megoldást? Az idő megáll.",()=>{allCells().forEach(([r,c])=>{if(!matches(r,c)){setCell(r,c,P.sol[r][c]);S.rev[r+","+c]=true;}});finish(true);}); };
+$("btn-new").onclick=()=>{ if(S.done){load(level,true);return;} ask("Új rejtvényt kezdesz? A mostani állás elvész.",()=>load(level,true)); };
+$("lenient").onchange=e=>{lenient=e.target.checked;store.set("lenient",lenient);if(!$("status").hidden)check();else changed();};
+document.querySelectorAll(".levels button").forEach(b=>b.onclick=()=>{ if(b.dataset.level===level)return; save(); load(b.dataset.level,false); });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
+window.addEventListener("pagehide",save);
+
+load(store.get("lastLevel")||"konnyu",false);
+document.querySelectorAll(".levels button").forEach(b=>b.addEventListener("click",()=>store.set("lastLevel",level)));
+})();
+</script>
