@@ -121,6 +121,8 @@ button{font:inherit;color:inherit}
 .g-title{flex:1;min-width:0;display:grid;line-height:1.15}
 .g-title b{font:800 17px/1.15 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-title span{font-size:12px;color:var(--muted)}
+.g-title span.res{display:flex;gap:4px;margin-top:2px}
+.g-title span.res .pill{font-size:12px;padding:1px 7px}
 .g-clock{font:700 18px/1 var(--f-display);font-variant-numeric:tabular-nums;padding:0 4px}
 .g-progress{height:3px;background:var(--chip);margin-left:max(10px, env(safe-area-inset-left, 0px));margin-right:max(10px, env(safe-area-inset-right, 0px));border-radius:99px;overflow:hidden}
 .g-progress i{display:block;height:100%;width:0;background:var(--pencil);transition:width .25s}
@@ -141,7 +143,6 @@ button{font:inherit;color:inherit}
 .cell.bad.cur{background:var(--pencil)}
 .cell.rev::after{content:"";position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 calc(var(--cell) * .26) calc(var(--cell) * .26);border-color:transparent transparent var(--muted) transparent}
 .game.done .cell{cursor:default}
-.toast{position:absolute;left:50%;top:6px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:nowrap;justify-content:center;background:var(--paper);border-radius:99px;padding:6px 8px;box-shadow:0 4px 18px rgba(0,0,0,.18);max-width:calc(100% - 20px)}
 .pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:99px;font-weight:700;font-size:14px;white-space:nowrap}
 .pill.ok{background:var(--good-soft);color:var(--good)}
 .pill.no{background:var(--bad-soft);color:var(--bad)}
@@ -179,6 +180,17 @@ button{font:inherit;color:inherit}
 .clue-list .n{color:var(--muted);font-size:12px;white-space:nowrap}
 
 body[data-layout="mobile"] .g-clues,body[data-layout="mobile"] .desk-hint{display:none}
+/* phone held sideways: grid on the left, clue + keyboard on the right */
+@media (orientation:landscape) and (max-height:520px){
+  body[data-layout="mobile"] .g-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto 1fr;column-gap:4px}
+  body[data-layout="mobile"] .g-gridarea{grid-column:1;grid-row:1 / span 3;padding:4px}
+  body[data-layout="mobile"] .cluebar{grid-column:2;grid-row:1;margin:4px 6px 0 0;min-height:44px}
+  body[data-layout="mobile"] .g-actions{grid-column:2;grid-row:2;padding:5px 6px 5px 0}
+  body[data-layout="mobile"] .g-actions button{padding:5px 4px}
+  body[data-layout="mobile"] .kbd{grid-column:2;grid-row:3;align-self:end;gap:4px;padding-top:4px;padding-bottom:4px;border-radius:10px 0 0 0}
+  body[data-layout="mobile"] .key{height:34px;font-size:17px}
+  body[data-layout="mobile"] .cb-txt{-webkit-line-clamp:1}
+}
 body[data-layout="desk"] .kbd,body[data-layout="desk"] #a-list{display:none}
 body[data-layout="desk"] .g-main{max-width:none}
 body[data-layout="desk"] .g-actions{padding-bottom:8px}
@@ -268,7 +280,6 @@ body[data-layout="desk"] .g-actions{padding-bottom:8px}
     <div class="g-main">
       <div class="g-gridarea" id="gridarea">
         <div class="grid" id="grid" aria-hidden="true"></div>
-        <div class="toast" id="toast" hidden></div>
       </div>
       <div class="cluebar">
         <button type="button" class="nav" id="cb-prev" aria-label="Előző meghatározás">‹</button>
@@ -365,14 +376,13 @@ tort:`1|ISTVÁN|Első királyunk, akit szentté avattak
 3|LEHEL|Kürtjéről híres honfoglaló vezér
 3|ANJOU|Károly Róbert dinasztiája
 3|HABSBURG|Mária Terézia dinasztiája
-3|MARATON|Görög győzelem helye Kr. e. 490-ben
+3|MARATON|Futóverseny egy Kr. e. 490-es görög győzelem helyéről
 3|SPÁRTA|Leónidász király városállama
 3|BIZÁNC|A Keletrómai Birodalom fővárosa
 3|REFORMÁCIÓ|Luther 1517-ben indított mozgalma
 3|VERSAILLES|A Napkirály palotája Párizs mellett
 3|JALTA|Az 1945-ös konferencia krími helyszíne
-3|TRAFALGAR|Nelson 1805-ös tengeri győzelmének helye
-3|NÁNDORFEHÉRVÁR|Hunyadi 1456-os győzelmének helye`,
+3|TRAFALGAR|Nelson 1805-ös tengeri győzelmének helye`,
 geo:`1|BUDAPEST|Magyarország fővárosa
 1|DUNA|Európa második leghosszabb folyója
 1|TISZA|Szegeden átfolyó folyó
@@ -665,7 +675,6 @@ kony:`1|KENYÉR|Pékáru, a mindennapi betevő
 2|BEJGLI|Diós vagy mákos karácsonyi tekercs
 2|PALACSINTA|Vékony tészta lekvárral vagy túróval
 2|KÜRTŐSKALÁCS|Fahengeren sütött, cukros édesség
-2|TÖLTÖTTKÁPOSZTA|Savanyú káposztás ünnepi étel
 3|ESZTERHÁZY|Diós-krémes torta egy hercegi család nevével
 3|RIGÓJANCSI|Csokoládés kockatorta egy cigányprímás nevével
 3|SOMLÓI|… galuska
@@ -787,6 +796,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 let G=null,cur=null,cellEls=null,screen="home",sheetKind=null,toastT=null;
 
 /* ---------- theme & layout ---------- */
+function syncThemeColor(){
+  const m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute("content",getComputedStyle(document.body).backgroundColor);
+}
 function applyTheme(user){
   if(prefs.theme==="system"){if(user)document.documentElement.removeAttribute("data-theme");}
   else document.documentElement.setAttribute("data-theme",prefs.theme);
@@ -867,7 +880,7 @@ function openGame(g){
   screen="game";
   $("home").hidden=true;$("game").hidden=false;
   $("g-topic").textContent=topicName(G.topic);
-  $("g-level").textContent=`${LEVELS[G.lvl].name} · ${G.P.words.length} szó`;
+  clearTimeout(toastT);levelLine();
   $("game").classList.toggle("done",!!G.done);
   renderGrid();renderClues();
   const first=G.P.words[0];select(first.r,first.c,first.dir);
@@ -883,6 +896,7 @@ function saveGame(){
   if(!G)return;
   if(G.done){store.del("game");return;}
   const {sol,...rest}=G;
+  rest.P={w:G.P.w,h:G.P.h,words:G.P.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))};
   store.set("game",rest);
 }
 
@@ -1013,9 +1027,10 @@ function check(){
   saveGame();
 }
 function toast(html){
-  const t=$("toast");t.innerHTML=html;t.hidden=false;
-  clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},3800);
+  const t=$("g-level");t.innerHTML=html;t.classList.add("res");
+  clearTimeout(toastT);toastT=setTimeout(levelLine,4500);
 }
+function levelLine(){const t=$("g-level");t.classList.remove("res");t.textContent=`${LEVELS[G.lvl].name} · ${G.P.words.length} szó`;}
 function reveal(list){
   if(G.done)return;
   let n=0;
@@ -1110,6 +1125,7 @@ document.addEventListener("keydown",e=>{
   if(sheetKind){if(e.key==="Escape")closeSheet();return;}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   const k=e.key;
+  if((k==="Enter"||k===" ")&&e.target.closest&&e.target.closest("button,input"))return;
   if(k.length===1&&/\p{L}/u.test(k)){e.preventDefault();typeLetter(k.toLocaleUpperCase("hu"));return;}
   if(k==="Backspace"||k==="Delete"){e.preventDefault();backspace();}
   else if(k==="ArrowRight"||k==="ArrowLeft"){e.preventDefault();if(cur.dir!=="a"&&wordAt(cur.r,cur.c,"a")){cur.dir="a";highlight();}else step(0,k==="ArrowRight"?1:-1);}
@@ -1140,12 +1156,14 @@ $("a-letter").onclick=()=>reveal([[cur.r,cur.c]]);
 $("a-word").onclick=()=>{const w=wordAt(cur.r,cur.c,cur.dir);if(w)reveal(cellsOf(w));};
 $("a-list").onclick=listSheet;
 $("pref-lenient").onchange=e=>{prefs.lenient=e.target.checked;savePrefs();};
-document.querySelectorAll("#theme-seg button").forEach(b=>b.onclick=()=>{prefs.theme=b.dataset.v;savePrefs();applyTheme(true);renderHome();});
+document.querySelectorAll("#theme-seg button").forEach(b=>b.onclick=()=>{prefs.theme=b.dataset.v;savePrefs();applyTheme(true);syncThemeColor();renderHome();});
 window.addEventListener("resize",setLayout);
 if(window.ResizeObserver)new ResizeObserver(sizeGrid).observe($("gridarea"));
 
 applyTheme(false);
 setLayout();
+syncThemeColor();
+try{window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",syncThemeColor);}catch(e){}
 renderHome();
 })();
 </script>
