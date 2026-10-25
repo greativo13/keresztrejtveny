@@ -1,4 +1,4 @@
-<!doctype html><html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html><html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Rejtvényfüzet">
 <title>Rejtvényfüzet</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#E9EDF1">
@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
 <style>
-/* Layout: home = scrolling booklet cover (rank, difficulty, topic cards). Game = fixed full-screen app: top bar, grid that fills the free space, clue bar, actions, built-in Hungarian keyboard on phones; clue columns on desktop. */
+/* Layout: home = scrolling booklet cover (rank + pencils, daily and Swedish puzzles, difficulty, topic cards, settings). Game = fixed full-screen app: top bar, grid filling the free space, clue bar, actions, built-in Hungarian keyboard on phones; clue columns on desktop. Results = stats tiles, best times, achievements. */
 :root{
   --bg:#E9EDF1;
   --paper:#FFFFFF;
@@ -50,14 +50,28 @@ html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+svg.pc{width:1em;height:1em;vertical-align:-.12em;flex:none}
+
+/* ---------- shared bits ---------- */
+.coin{display:inline-flex;align-items:center;gap:4px;background:var(--pencil-soft);color:var(--ink);border-radius:99px;padding:4px 10px 4px 8px;font:800 15px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.coin svg.pc{color:var(--pencil-ink)}
+:root[data-theme="dark"] .coin svg.pc{color:var(--pencil)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .coin svg.pc{color:var(--pencil)}}
+.coin.bump{animation:bump .5s ease-out}
+@keyframes bump{30%{transform:scale(1.25);background:var(--pencil)}}
+.stars{letter-spacing:1px;font-size:15px;color:var(--rule)}
+.stars .on{color:var(--pencil)}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top, 0px) + 10px);transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--paper);border-radius:99px;padding:10px 16px;font-weight:700;font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px);text-align:center;display:flex;align-items:center;gap:6px}
+.toast svg.pc{color:var(--pencil)}
 
 /* ---------- Home ---------- */
-.home{max-width:980px;margin:0 auto;padding-block:22px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:26px}
+.home,.stats-screen{max-width:980px;margin:0 auto;padding-block:22px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:26px}
 .h-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px 24px}
 .brand h1{font-family:var(--f-display);font-weight:800;font-size:clamp(34px,8vw,52px);letter-spacing:-.025em;line-height:1;margin:0}
 .brand h1 span{background:linear-gradient(transparent 58%, var(--pencil) 58%, var(--pencil) 90%, transparent 90%);padding:0 2px}
 .brand p{margin:8px 0 0;color:var(--muted);max-width:40ch}
-.rank{display:flex;gap:12px;align-items:center;background:var(--paper);border-radius:14px;padding:12px 14px;min-width:min(100%,300px)}
+.rank{display:grid;gap:10px;background:var(--paper);border-radius:14px;padding:12px 14px;min-width:min(100%,320px)}
+.rank-main{display:flex;gap:12px;align-items:center}
 .rank-badge{width:56px;height:56px;flex:none;display:grid;place-items:center;background:var(--ink);color:var(--paper);border-radius:12px;text-align:center;line-height:1}
 .rank-badge small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
 .rank-badge b{font:800 26px/1 var(--f-display)}
@@ -66,6 +80,9 @@ button{font:inherit;color:inherit}
 .bar{height:8px;background:var(--chip);border-radius:99px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--pencil);border-radius:99px;transition:width .4s}
 .rank-info small{color:var(--muted);font-size:13px}
+.rank-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--rule);padding-top:10px}
+.link-btn{border:0;background:transparent;font-weight:700;font-size:15px;cursor:pointer;padding:6px 4px;border-radius:8px}
+.link-btn:hover{background:var(--chip)}
 
 .block{display:grid;gap:12px}
 .block h2{margin:0;font:800 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -75,6 +92,21 @@ button{font:inherit;color:inherit}
 .cont .c-txt small{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;opacity:.8}
 .cont b{font:800 19px/1.15 var(--f-display)}
 .cont .arrow{font:800 26px/1 var(--f-display)}
+
+.specials{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.special{display:grid;gap:8px;text-align:left;background:var(--paper);border:0;border-radius:14px;padding:14px 16px;position:relative}
+button.special{cursor:pointer}
+.special .sp-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.special h3{margin:0;font:800 19px/1.15 var(--f-display)}
+.special .sp-sub{color:var(--muted);font-size:14px}
+.special .sp-meta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13px;color:var(--muted)}
+.special .tag{font:800 11px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:5px 8px;border-radius:99px;white-space:nowrap}
+.special.daily{border:2px solid var(--ink)}
+.sp-btns{display:flex;gap:8px;flex-wrap:wrap}
+.sp-btns .btn{padding:10px 14px;font-size:15px}
+.sved-mini{display:grid;grid-template-columns:repeat(4,16px);grid-auto-rows:16px;gap:1px;flex:none}
+.sved-mini i{background:var(--paper);box-shadow:0 0 0 1px var(--line)}
+.sved-mini i.c{background:var(--chip)}
 
 .diffs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .diff{display:grid;gap:3px;text-align:left;background:var(--paper);border:2px solid transparent;border-radius:12px;padding:12px;cursor:pointer}
@@ -88,17 +120,18 @@ button{font:inherit;color:inherit}
 .topic{display:flex;gap:12px;align-items:center;text-align:left;background:var(--paper);border:0;border-radius:14px;padding:12px;cursor:pointer;transition:transform .12s}
 .topic:hover{transform:translateY(-1px)}
 .topic:active{transform:scale(.99)}
-.mono{width:52px;height:52px;flex:none;display:grid;place-items:center;border:2px solid var(--line);border-radius:4px;font:800 28px/1 var(--f-display);position:relative;background:var(--paper)}
+.mono{width:52px;height:52px;flex:none;display:grid;place-items:center;border:2px solid var(--line);border-radius:4px;font:800 28px/1 var(--f-display);background:var(--paper)}
 .topic.played .mono{background:var(--pencil-soft)}
 .t-txt{display:grid;gap:2px;min-width:0}
 .t-txt b{font:700 17px/1.2 var(--f-display)}
 .t-txt > span{font-size:13px;color:var(--muted)}
 .t-stars{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:2px}
-.stars{letter-spacing:1px;font-size:15px;color:var(--rule)}
-.stars .on{color:var(--pencil)}
+.t-new{font:800 10px/1 var(--f-display);letter-spacing:.1em;background:var(--pencil);color:var(--pencil-ink);padding:3px 6px;border-radius:99px;margin-left:6px;vertical-align:2px}
 
 .settings{display:grid;gap:10px}
 .set-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:var(--paper);border-radius:12px;padding:12px 14px}
+.set-row label,.set-row .lbl{flex:1 1 160px;min-width:0}
+.set-row small{display:block;color:var(--muted);font-size:13px}
 .seg{display:inline-flex;background:var(--chip);border-radius:99px;padding:3px}
 .seg button{border:0;background:transparent;padding:7px 12px;border-radius:99px;font-weight:700;font-size:14px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
@@ -109,24 +142,53 @@ button{font:inherit;color:inherit}
 .switch input:checked + span{background:var(--good)}
 .switch input:checked + span::after{transform:translateX(18px)}
 .switch input:focus-visible + span{outline:3px solid var(--pencil);outline-offset:2px}
-.set-row label{flex:1;min-width:0}
-.set-row small{display:block;color:var(--muted);font-size:13px}
+.how{background:var(--paper);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted);display:grid;gap:6px}
+.how b{color:var(--ink)}
+.how ul{margin:0;padding-left:18px;display:grid;gap:3px}
+
+/* ---------- Results screen ---------- */
+.s-head{display:flex;align-items:center;gap:8px}
+.s-head h1{margin:0;font:800 30px/1 var(--f-display)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--paper);border-radius:14px;padding:14px;display:grid;gap:4px}
+.tile small{font:800 11px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tile b{font:800 32px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.tile span{font-size:13px;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;background:var(--paper);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font:800 11px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td.none{color:var(--rule)}
+.achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.ach{display:flex;gap:12px;align-items:center;background:var(--paper);border-radius:12px;padding:12px}
+.ach .medal{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--chip);color:var(--muted);font:800 20px/1 var(--f-display)}
+.ach.got .medal{background:var(--pencil);color:var(--pencil-ink)}
+.ach .a-txt{flex:1;min-width:0;display:grid;gap:2px}
+.ach .a-txt b{font:700 16px/1.2 var(--f-display)}
+.ach .a-txt span{font-size:13px;color:var(--muted)}
+.ach:not(.got) .a-txt b{color:var(--muted)}
+.ach .rw{font-size:13px;font-weight:700;display:flex;align-items:center;gap:3px;white-space:nowrap}
 
 /* ---------- Game ---------- */
 .game{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px);touch-action:manipulation;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
-.g-top{flex:none;display:flex;align-items:center;gap:8px;padding-block:4px 4px;padding-left:max(10px, env(safe-area-inset-left, 0px));padding-right:max(10px, env(safe-area-inset-right, 0px))}
+.g-top{flex:none;display:flex;align-items:center;gap:6px;padding-block:4px 4px;padding-left:max(10px, env(safe-area-inset-left, 0px));padding-right:max(10px, env(safe-area-inset-right, 0px))}
 .icon-btn{width:40px;height:40px;flex:none;display:grid;place-items:center;border:0;background:transparent;border-radius:10px;cursor:pointer;font:800 24px/1 var(--f-display)}
 .icon-btn:hover{background:var(--chip)}
 .icon-btn svg{width:22px;height:22px}
 .g-title{flex:1;min-width:0;display:grid;line-height:1.15}
 .g-title b{font:800 17px/1.15 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.g-title span{font-size:12px;color:var(--muted)}
+.g-title span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-title span.res{display:flex;gap:4px;margin-top:2px}
 .g-title span.res .pill{font-size:12px;padding:1px 7px}
-.g-clock{font:700 18px/1 var(--f-display);font-variant-numeric:tabular-nums;padding:0 4px}
-.g-progress{height:3px;background:var(--chip);margin-left:max(10px, env(safe-area-inset-left, 0px));margin-right:max(10px, env(safe-area-inset-right, 0px));border-radius:99px;overflow:hidden}
+.pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:99px;font-weight:700;font-size:14px;white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good)}
+.pill.no{background:var(--bad-soft);color:var(--bad)}
+.pill.em{background:var(--chip);color:var(--muted)}
+.g-clock{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;padding:0 2px}
+.g-progress{height:3px;background:var(--chip);margin-left:max(10px, env(safe-area-inset-left, 0px));margin-right:max(10px, env(safe-area-inset-right, 0px));border-radius:99px;overflow:hidden;flex:none}
 .g-progress i{display:block;height:100%;width:0;background:var(--pencil);transition:width .25s}
-.g-body{flex:1;min-height:0;display:flex;padding-left:max(0px, env(safe-area-inset-left, 0px));padding-right:max(0px, env(safe-area-inset-right, 0px))}
+.g-body{flex:1;min-height:0;display:flex;padding-left:env(safe-area-inset-left, 0px);padding-right:env(safe-area-inset-right, 0px)}
 .g-main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
 .g-gridarea{flex:1;min-height:0;overflow:hidden;display:grid;place-items:center;padding:8px;position:relative}
 .grid{display:grid;grid-template-columns:repeat(var(--cols), var(--cell, 32px));grid-auto-rows:var(--cell, 32px);gap:1px;padding:1px}
@@ -142,11 +204,19 @@ button{font:inherit;color:inherit}
 .cell.bad .ch{color:var(--bad)}
 .cell.bad.cur{background:var(--pencil)}
 .cell.rev::after{content:"";position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 calc(var(--cell) * .26) calc(var(--cell) * .26);border-color:transparent transparent var(--muted) transparent}
+.cell.won{animation:won .5s ease-out backwards}
+@keyframes won{40%{background:var(--good-soft)}}
+.cell.clue{background:var(--chip);display:flex;flex-direction:column;align-items:stretch;place-items:stretch}
+.cell.clue .cl{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center;text-align:center;font:700 max(7px, calc(var(--cell) * .18))/1.02 var(--f-body);padding:1px 2px;overflow:hidden;overflow-wrap:anywhere;hyphens:auto;position:relative;color:var(--ink)}
+.cell.clue .cl + .cl{border-top:1px solid var(--line)}
+.cell.clue .cl i{position:absolute;font-style:normal;font-weight:800;font-size:max(8px, calc(var(--cell) * .2));line-height:1;color:var(--muted)}
+.cell.clue .cl.a{padding-right:calc(var(--cell) * .14)}
+.cell.clue .cl.a i{right:1px;top:50%;transform:translateY(-50%)}
+.cell.clue .cl.d{padding-bottom:calc(var(--cell) * .12)}
+.cell.clue .cl.d i{bottom:0;left:50%;transform:translateX(-50%)}
+.cell.clue .cl.on{background:var(--pencil);color:var(--pencil-ink)}
+.cell.clue .cl.on i{color:var(--pencil-ink)}
 .game.done .cell{cursor:default}
-.pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:99px;font-weight:700;font-size:14px;white-space:nowrap}
-.pill.ok{background:var(--good-soft);color:var(--good)}
-.pill.no{background:var(--bad-soft);color:var(--bad)}
-.pill.em{background:var(--chip);color:var(--muted)}
 
 .cluebar{flex:none;display:flex;align-items:stretch;gap:4px;margin-inline:10px;background:var(--pencil-soft);border-radius:12px;min-height:52px}
 .cluebar .nav{width:40px;flex:none;border:0;background:transparent;font:800 24px/1 var(--f-display);cursor:pointer;border-radius:12px}
@@ -155,9 +225,11 @@ button{font:inherit;color:inherit}
 .cb-tag{font:800 12px/1.2 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .cb-txt{font-size:16px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .g-actions{flex:none;display:flex;gap:6px;padding:6px 10px}
-.g-actions button{flex:1 1 0;min-width:0;border:1.5px solid var(--rule);background:var(--paper);border-radius:10px;padding:7px 6px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
+.g-actions button{flex:1 1 0;min-width:0;border:1.5px solid var(--rule);background:var(--paper);border-radius:10px;padding:6px 4px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px}
+.g-actions button em{font-style:normal;font-size:12px;display:inline-flex;align-items:center;gap:1px;background:var(--pencil-soft);border-radius:99px;padding:1px 6px 1px 4px}
 .g-actions button.primary{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .g-actions button:active{transform:scale(.97)}
+.g-actions button:disabled{opacity:.5}
 
 .kbd{flex:none;display:grid;gap:6px;padding:6px max(4px, env(safe-area-inset-right, 0px)) 8px max(4px, env(safe-area-inset-left, 0px));background:var(--chip)}
 .kbd .row{display:flex;justify-content:center;gap:5px}
@@ -180,37 +252,50 @@ button{font:inherit;color:inherit}
 .clue-list .n{color:var(--muted);font-size:12px;white-space:nowrap}
 
 body[data-layout="mobile"] .g-clues,body[data-layout="mobile"] .desk-hint{display:none}
-/* phone held sideways: grid on the left, clue + keyboard on the right */
+body[data-layout="desk"] .kbd,body[data-layout="desk"] #a-list{display:none}
+body[data-layout="desk"] .g-actions{padding-bottom:8px}
 @media (orientation:landscape) and (max-height:520px){
   body[data-layout="mobile"] .g-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto 1fr;column-gap:4px}
   body[data-layout="mobile"] .g-gridarea{grid-column:1;grid-row:1 / span 3;padding:4px}
   body[data-layout="mobile"] .cluebar{grid-column:2;grid-row:1;margin:4px 6px 0 0;min-height:44px}
   body[data-layout="mobile"] .g-actions{grid-column:2;grid-row:2;padding:5px 6px 5px 0}
-  body[data-layout="mobile"] .g-actions button{padding:5px 4px}
   body[data-layout="mobile"] .kbd{grid-column:2;grid-row:3;align-self:end;gap:4px;padding-top:4px;padding-bottom:4px;border-radius:10px 0 0 0}
   body[data-layout="mobile"] .key{height:34px;font-size:17px}
   body[data-layout="mobile"] .cb-txt{-webkit-line-clamp:1}
 }
-body[data-layout="desk"] .kbd,body[data-layout="desk"] #a-list{display:none}
-body[data-layout="desk"] .g-main{max-width:none}
-body[data-layout="desk"] .g-actions{padding-bottom:8px}
+
+/* larger text option */
+body.big{font-size:18px}
+body.big .cb-txt{font-size:19px}
+body.big .clue-list li{font-size:17px}
+body.big .key{font-size:23px}
+body.big .g-actions button{font-size:16px}
+body.big .t-txt > span,body.big .diff span,body.big .special .sp-sub{font-size:15px}
+body.big .cell.clue .cl{font-size:max(8px, calc(var(--cell) * .2))}
 
 /* ---------- Sheets ---------- */
 .overlay{position:fixed;inset:0;background:var(--shade);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.sheet{background:var(--bg);width:100%;max-width:520px;max-height:85%;overflow:auto;border-radius:18px 18px 0 0;padding:18px max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));display:grid;gap:12px}
-@media (min-width:700px){.overlay{align-items:center}.sheet{border-radius:18px}}
+.sheet{background:var(--bg);width:100%;max-width:520px;max-height:88%;overflow:auto;border-radius:18px 18px 0 0;padding:18px max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));display:grid;gap:12px}
+@media (min-width:700px),(orientation:landscape) and (max-height:520px){.overlay{align-items:center}.sheet{border-radius:18px}}
 .sheet h2{margin:0;font:800 24px/1.15 var(--f-display);text-wrap:balance}
 .sheet p{margin:0;color:var(--muted)}
 .sheet .btns{display:grid;gap:8px}
-.btn{border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;padding:13px 14px;font-weight:700;font-size:16px;cursor:pointer;text-align:center}
+.btn{border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;padding:13px 14px;font-weight:700;font-size:16px;cursor:pointer;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.btn.yellow{background:var(--pencil);border-color:var(--pencil);color:var(--pencil-ink)}
 .btn.warn{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
 .menu-row{display:flex;align-items:center;gap:12px;background:var(--paper);border-radius:12px;padding:12px 14px}
 .menu-row label{flex:1}
 .win-stars{display:flex;gap:6px;font-size:44px;line-height:1;color:var(--rule)}
 .win-stars span.on{color:var(--pencil)}
-.win-rank{background:var(--paper);border-radius:12px;padding:10px 12px;color:var(--ink)!important;font-weight:700}
-.sheet .clue-sec{background:var(--paper)}
+.panel{background:var(--paper);border-radius:12px;padding:10px 12px;display:grid;gap:4px}
+.panel .rw-row{display:flex;justify-content:space-between;gap:10px;font-size:15px}
+.panel .rw-row b{display:inline-flex;align-items:center;gap:3px;font-variant-numeric:tabular-nums}
+.panel .rw-row.total{border-top:1px solid var(--rule);padding-top:6px;margin-top:2px;font-weight:700}
+.panel .rw-row.muted{color:var(--muted)}
+.win-rank{font-weight:700}
+.sheet textarea{width:100%;font:15px/1.4 var(--f-body);border:1.5px solid var(--rule);border-radius:10px;padding:10px;background:var(--paper);color:var(--ink);resize:none}
 @media (prefers-reduced-motion:no-preference){
   .cell.pop .ch{animation:pop .16s ease-out}
   @keyframes pop{from{transform:scale(1.35)}to{transform:none}}
@@ -221,25 +306,42 @@ body[data-layout="desk"] .g-actions{padding-bottom:8px}
   .win-stars span.on:nth-child(3){animation-delay:.24s}
   @keyframes star{from{transform:scale(0) rotate(-40deg)}to{transform:none}}
 }
+@media (prefers-reduced-motion:reduce){.coin.bump,.cell.won{animation:none}}
 </style>
+
+<div class="toast" id="toast" role="status" hidden></div>
 
 <div class="home" id="home">
   <header class="h-top">
     <div class="brand">
       <h1><span>Rejtvényfüzet</span></h1>
-      <p>Magyar keresztrejtvények hét témában. Minden játékban új rácsot rakunk össze.</p>
+      <p>Magyar keresztrejtvények tíz témában. Minden játékban új rácsot rakunk össze.</p>
     </div>
     <div class="rank">
-      <div class="rank-badge"><div><small>Szint</small><b id="rank-lvl">1</b></div></div>
-      <div class="rank-info">
-        <strong id="rank-name">Kezdő</strong>
-        <div class="bar"><i id="rank-bar"></i></div>
-        <small id="rank-next"></small>
+      <div class="rank-main">
+        <div class="rank-badge"><div><small>Szint</small><b id="rank-lvl">1</b></div></div>
+        <div class="rank-info">
+          <strong id="rank-name">Kezdő</strong>
+          <div class="bar"><i id="rank-bar"></i></div>
+          <small id="rank-next"></small>
+        </div>
+      </div>
+      <div class="rank-foot">
+        <span class="coin" title="Ceruzák"><span class="pc-slot"></span><span class="coin-n">0</span></span>
+        <button type="button" class="link-btn" id="open-stats">Eredmények és kitüntetések ›</button>
       </div>
     </div>
   </header>
 
   <button type="button" class="cont" id="continue" hidden></button>
+
+  <section class="block">
+    <h2>Különleges</h2>
+    <div class="specials">
+      <div class="special daily" id="daily-card"></div>
+      <button type="button" class="special" id="sved-card"></button>
+    </div>
+  </section>
 
   <section class="block">
     <h2>Nehézség</h2>
@@ -258,13 +360,47 @@ body[data-layout="desk"] .g-actions{padding-bottom:8px}
       <span class="switch"><input type="checkbox" id="pref-lenient"><span></span></span>
     </div>
     <div class="set-row">
-      <span>Megjelenés</span>
+      <label for="pref-big">Nagyobb betűk<small>Nagyobb meghatározások, gombok és billentyűk.</small></label>
+      <span class="switch"><input type="checkbox" id="pref-big"><span></span></span>
+    </div>
+    <div class="set-row">
+      <span class="lbl">Megjelenés</span>
       <div class="seg" id="theme-seg" role="group" aria-label="Megjelenés">
         <button type="button" data-v="system">Automatikus</button>
         <button type="button" data-v="light">Világos</button>
         <button type="button" data-v="dark">Sötét</button>
       </div>
     </div>
+    <div class="set-row" id="install-row" hidden>
+      <span class="lbl">Telepítés a telefonra<small id="install-txt"></small></span>
+      <button type="button" class="btn yellow" id="install-btn" hidden>Telepítés</button>
+    </div>
+    <div class="how">
+      <b>Hogyan gyűjthetsz ceruzát?</b>
+      <ul>
+        <li>Minden saját erőből kitöltött, helyes szó: +1</li>
+        <li>Megfejtés: Könnyű +5, Közepes +8, Nehéz +12, csillagonként további +2</li>
+        <li>Napi rejtvény: +10 bónusz</li>
+        <li>Kitüntetések: +5–50</li>
+      </ul>
+      <span>Ceruzáért betűt (3) vagy szót (legfeljebb 8) fedhetsz fel. Az ellenőrzés ingyenes.</span>
+    </div>
+  </section>
+</div>
+
+<div class="stats-screen" id="stats" hidden>
+  <div class="s-head">
+    <button type="button" class="icon-btn" id="stats-back" aria-label="Vissza"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1>Eredmények</h1>
+  </div>
+  <div class="tiles" id="tiles"></div>
+  <section class="block">
+    <h2>Legjobb idők</h2>
+    <div class="tbl-wrap"><table id="best-table"></table></div>
+  </section>
+  <section class="block">
+    <h2 id="ach-title">Kitüntetések</h2>
+    <div class="achs" id="achs"></div>
   </section>
 </div>
 
@@ -272,6 +408,7 @@ body[data-layout="desk"] .g-actions{padding-bottom:8px}
   <div class="g-top">
     <button type="button" class="icon-btn" id="g-back" aria-label="Vissza a menübe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="g-title"><b id="g-topic"></b><span id="g-level"></span></div>
+    <span class="coin" id="g-coins" title="Ceruzák"><span class="pc-slot"></span><span class="coin-n">0</span></span>
     <div class="g-clock" id="g-clock">0:00</div>
     <button type="button" class="icon-btn" id="g-more" aria-label="További lehetőségek"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
   </div>
@@ -279,7 +416,7 @@ body[data-layout="desk"] .g-actions{padding-bottom:8px}
   <div class="g-body">
     <div class="g-main">
       <div class="g-gridarea" id="gridarea">
-        <div class="grid" id="grid" aria-hidden="true"></div>
+        <div class="grid" id="grid" lang="hu" aria-hidden="true"></div>
       </div>
       <div class="cluebar">
         <button type="button" class="nav" id="cb-prev" aria-label="Előző meghatározás">‹</button>
@@ -288,8 +425,8 @@ body[data-layout="desk"] .g-actions{padding-bottom:8px}
       </div>
       <div class="g-actions">
         <button type="button" class="primary" id="a-check">Ellenőrzés</button>
-        <button type="button" id="a-letter">Betű</button>
-        <button type="button" id="a-word">Szó</button>
+        <button type="button" id="a-letter"></button>
+        <button type="button" id="a-word"></button>
         <button type="button" id="a-list">Lista</button>
       </div>
       <p class="desk-hint">Gépelj a billentyűzeten. <kbd>Szóköz</kbd> vagy újabb kattintás: irányváltás · <kbd>Enter</kbd>: következő szó · nyilak: mozgás.</p>
@@ -312,13 +449,17 @@ const TOPICS=[
   {id:"tud",name:"Tudomány",desc:"Elemek, bolygók, feltalálók"},
   {id:"muv",name:"Irodalom és művészet",desc:"Költők, festők, zeneszerzők"},
   {id:"ter",name:"Természet",desc:"Állatok és növények"},
-  {id:"kony",name:"Konyha és otthon",desc:"Ételek, italok, háztartás"}
+  {id:"kony",name:"Konyha és otthon",desc:"Ételek, italok, háztartás"},
+  {id:"sport",name:"Sport",desc:"Bajnokok, sportágak, nagy meccsek",isNew:true},
+  {id:"film",name:"Film és zene",desc:"Filmek, sztárok, dalok, zenekarok",isNew:true},
+  {id:"szolas",name:"Szólások",desc:"Közmondások hiányzó szavai",isNew:true}
 ];
 const LEVELS={
   1:{name:"Könnyű",size:9,target:8,msize:9,mtarget:8,note:"Hétköznapi szavak"},
   2:{name:"Közepes",size:11,target:11,msize:10,mtarget:10,note:"Általános műveltség"},
   3:{name:"Nehéz",size:13,target:13,msize:11,mtarget:12,note:"Fejtörő kérdések"}
 };
+const SVED_SIZES={1:{size:6,target:6},2:{size:7,target:8},3:{size:8,target:10}};
 function levelCfg(lvl,compact){const L=LEVELS[lvl];return compact?{size:L.msize,target:L.mtarget}:{size:L.size,target:L.target};}
 const DATA={
 tort:`1|ISTVÁN|Első királyunk, akit szentté avattak
@@ -694,10 +835,361 @@ kony:`1|KENYÉR|Pékáru, a mindennapi betevő
 3|SÓLET|Babos zsidó étel, főtt tojással
 3|LIBAMÁJ|Ludak drága csemegéje
 3|PACAL|Marhapörköltként is főzött belsőség
-3|MÁKOSGUBA|Kiflis-mákos karácsonyi édesség`
+3|MÁKOSGUBA|Kiflis-mákos karácsonyi édesség`,
+sport:`1|FOCI|A labdarúgás közkeletű neve
+1|LABDA|Gömb alakú sportszer
+1|KAPU|Ide kell berúgni a labdát
+1|GÓL|Találat a fociban
+1|BÍRÓ|Sípjával vezeti a mérkőzést
+1|ÚSZÁS|Medencében űzött sport
+1|FUTÁS|Atlétikai alapsport, a maraton is ilyen
+1|TENISZ|Ütővel, sárga labdával, háló fölött játsszák
+1|SÍELÉS|Havas lejtőn űzött téli sport
+1|KOSÁRLABDA|Gyűrűbe dobják a labdát
+1|ÉREM|Arany, ezüst vagy bronz a dobogón
+1|KUPA|Serleg a győztesnek
+1|EDZŐ|A csapat felkészítője
+1|CSAPAT|Együtt játszó sportolók
+1|MEZ|Számozott sportpóló
+1|PÁLYA|Itt játsszák a meccset
+1|MECCS|A mérkőzés rövid neve
+1|RAJT|A verseny indulása
+1|CÉL|Ide fut be elsőként a győztes
+1|KERÉKPÁR|A Tour de France sporteszköze
+1|SÍP|A bíró fújja meg
+2|PUSKÁS|Az Aranycsapat legendás csatára (Ferenc)
+2|OLIMPIA|Négyévente rendezett sportesemény
+2|VÍZILABDA|Medencés csapatsport, a magyarok egyik legsikeresebbje
+2|KAJAK|Kettős lapáttal hajtott sportcsónak
+2|KENU|Egylapátos, féltérdelve hajtott sportcsónak
+2|VÍVÁS|Kard, tőr vagy párbajtőr sportja
+2|BIRKÓZÁS|Kötöttfogású vagy szabadfogású küzdősport
+2|ÖKÖLVÍVÁS|Kesztyűs küzdősport szorítóban
+2|TORNA|Gyűrű, korlát, nyújtó sportága
+2|MARATON|42,195 km-es futóverseny
+2|DOBOGÓ|Az első három helyezett áll fel rá
+2|TIZENEGYES|Büntetőrúgás a fociban
+2|SZÖGLET|Sarokrúgás a fociban
+2|LESÁLLÁS|Szabálytalan helyzet a támadónál
+2|WIMBLEDON|Füves pályás teniszverseny Londonban
+2|HUNGARORING|A mogyoródi versenypálya
+2|KÉZILABDA|Hétfős csapatok, kézzel dobott gólok
+2|JÉGKORONG|A hoki magyar neve
+2|PINGPONG|Az asztalitenisz köznapi neve
+2|SÚLYLÖKÉS|Golyót taszítanak egy körből
+3|EGERSZEGI|Ötszörös olimpiai bajnok úszónőnk (Krisztina)
+3|PAPP|Háromszoros olimpiai bajnok ökölvívó (László)
+3|HOSSZÚ|„Iron Lady”, az úszónő (Katinka)
+3|BALCZÓ|Az öttusa legendája (András)
+3|KÁRPÁTI|Hatszoros olimpiai bajnok kardvívó (Rudolf)
+3|SZILÁGYI|Háromszoros olimpiai bajnok kardvívó (Áron)
+3|ARANYCSAPAT|Az 1950-es évek legendás válogatottja
+3|WEMBLEY|Az 1953-as 6:3 helyszíne
+3|BERN|Az 1954-es vb-döntő helyszíne
+3|ÖTTUSA|Vívás, úszás, lovaglás, futás és lövészet
+3|TRIATLON|Úszás, kerékpár és futás egyben
+3|BIATLON|Sífutás és lövészet
+3|KRIKETT|Ütős angol labdajáték kapufákkal
+3|SZUMÓ|Japán birkózás nagy testű versenyzőkkel
+3|SZLALOM|Kapuk között kanyargó síverseny
+3|DZSÚDÓ|Japán küzdősport, „a hajlékonyság útja”
+3|PARALIMPIA|Mozgássérült sportolók olimpiája
+3|DOPPING|Tiltott teljesítményfokozás
+3|MESTERHÁRMAS|Egy játékos három gólja egy meccsen
+3|CSEH|Hatszoros olimpiai érmes úszó (László)`,
+film:`1|MOZI|Itt vetítik a filmeket
+1|TÉVÉ|Ezen nézzük a híradót
+1|RÁDIÓ|Hallgatjuk, adókat fog
+1|ÉNEK|Kórusban ezt csinálják
+1|ZENE|Hangokból álló művészet
+1|KONCERT|Élő zenei előadás
+1|SZÍNÉSZ|Filmben vagy színpadon játszik
+1|RENDEZŐ|A filmforgatás irányítója
+1|KAMERA|Ezzel forgatják a filmet
+1|JEGY|Belépő a moziba
+1|MIKI|… egér, Disney hőse
+1|TOM|… és Jerry
+1|OSCAR|Híres amerikai filmdíj
+1|SZTÁR|Ünnepelt híresség
+1|TAPS|A közönség elismerése
+1|FURULYA|Fúvós hangszer, sokan iskolában tanulják
+1|MIKROFON|Az énekes ebbe énekel
+1|SOROZAT|Részekből álló tévéműsor
+1|KOTTA|Hangjegyekkel leírt zene
+1|DAL|Énekelt zenemű
+1|FILM|Moziban vetítik
+2|VUK|Fekete István kis rókája, rajzfilmen is
+2|MACSKAFOGÓ|Ternovszky Béla egér-macska rajzfilmje
+2|TANÚ|Bacsó Péter híres filmje (A …)
+2|KÖRHINTA|Fábri Zoltán 1956-os filmje
+2|HOFI|Legendás humorista (Géza)
+2|OMEGA|A Gyöngyhajú lány zenekara
+2|KOVÁCS|„Add már, uram, az esőt!” énekesnője (Kati)
+2|HITCHCOCK|A Psycho rendezője
+2|CHAPLIN|Charlie, a csavargó
+2|ELVIS|„A rock and roll királya”
+2|BEATLES|A liverpooli gombafejűek
+2|ABBA|Svéd együttes, „Mamma Mia!”
+2|MADONNA|„A pop királynője”
+2|JACKSON|„A pop királya” (Michael)
+2|TITANIC|1997-es film egy elsüllyedt hajóról
+2|SHREK|Zöld rajzfilmes ogre
+2|NEMO|A kis bohóchal, akit keresnek
+2|MUSICAL|Énekes-táncos színpadi műfaj
+2|FESZTIVÁL|A Sziget vagy a VOLT
+2|ILLÉS|Szörényi és Bródy együttese
+3|JANCSÓ|A Szegénylegények rendezője (Miklós)
+3|SZABÓ|A Mephisto rendezője (István)
+3|NEMES|A Saul fia Oscar-díjas rendezője (… Jeles László)
+3|ENYEDI|A Testről és lélekről rendezője (Ildikó)
+3|LUGOSI|Drakula legendás megformálója (Béla)
+3|LATINOVITS|A Szindbád főszereplője (Zoltán)
+3|SEBESTYÉN|Népdalénekes, „Szerelem, szerelem” (Márta)
+3|PRESSER|Az LGT billentyűse, dalszerző (Gábor)
+3|CSERHÁTI|A „Hívlak” énekesnője (Zsuzsa)
+3|KOMÉDIA|Vígjáték idegen szóval
+3|SZINKRON|Magyar hangú változat
+3|FORGATÓKÖNYV|A film írott alapja
+3|STATISZTA|Néma háttérszereplő
+3|VÁGÓ|Ő illeszti össze a jeleneteket
+3|KASZKADŐR|A veszélyes jelenetek dublőre
+3|SZIMFÓNIA|Többtételes zenekari mű
+3|OKTÁV|Nyolc hangnyi hangköz
+3|KAMARAZENE|Kis együttesre írt zene
+3|ZORÁN|„Kell ott fenn egy ország” énekese
+3|CURTIZ|A Casablanca magyar születésű rendezője (Michael)`,
+szolas:`1|ALMA|Nem esik messze az … a fájától
+1|KUTYA|Amelyik … ugat, az nem harap
+1|TÚZOK|Jobb ma egy veréb, mint holnap egy …
+1|VÍZ|Lassú … partot mos
+1|CSEPP|Egy … a tengerben
+1|VIHART|Aki szelet vet, … arat
+1|ARANY|Nem mind …, ami fénylik
+1|ALJA|Sok beszédnek sok az …
+1|MACSKA|Ha nincs otthon a …, cincognak az egerek
+1|ÉHES|… disznó makkal álmodik
+1|VAK|… tyúk is talál szemet
+1|SZALONNA|Kutyából nem lesz …
+1|ÉRSZ|Lassan járj, tovább …
+1|HAZUG|A … embert hamarabb utolérik, mint a sánta kutyát
+1|TŰZ|Nincs füst … nélkül
+1|ARANYAT|Ki korán kel, … lel
+1|KICSI|Sok … sokra megy
+1|ESIK|Aki másnak vermet ás, maga … bele
+1|MELEG|Addig üsd a vasat, amíg …
+1|FOGÁT|Ajándék lónak ne nézd a …
+1|ROSSZ|… pénz nem vész el
+2|PAPNÉ|Kinek a pap, kinek a …
+2|SZÉL|Nem zörög a haraszt, ha a … nem fújja
+2|ÉKESKEDIK|Más tollával …
+2|VERÉBNEK|Bagoly mondja …, hogy nagyfejű
+2|ARAT|Ki mint vet, úgy …
+2|NYARAT|Egy fecske nem csinál …
+2|GYORSAN|Kétszer ad, aki … ad
+2|EBGONDOLAT|Késő bánat, …
+2|GYŐZ|Sok lúd disznót …
+2|ERDŐT|Nem látja a fától az …
+2|TANUL|Jó pap is holtig …
+2|FOLTJÁT|Zsák a … megtalálja
+2|TESTTEL|Lassan a …!
+2|TŰZRE|Rossz fát tesz a …
+2|ERŐS|Kicsi a bors, de …
+2|TÖVIS|Nincs rózsa … nélkül
+2|KOVÁCSA|Mindenki a maga szerencséjének a …
+2|MENNYKŐ|Csalánba nem üt a …
+2|EZÜST|Beszélni …, hallgatni arany
+2|REGGEL|Okos ember … is okos
+3|ÁLLA|Felkopik az … (éhen marad)
+3|CSOMÓT|Kákán is … keres (mindenben hibát lát)
+3|FAKÓ|Eb ura … (én parancsolok)
+3|HOLLÓ|Ritka, mint a fehér …
+3|FABATKÁT|Egy … sem ér (értéktelen)
+3|KERÜL|Kutyaszorítóba … (bajba jut)
+3|SEMMIÉRT|Sok hűhó …
+3|HAGY|Faképnél … (otthagy)
+3|LÁGYÁRA|Nem esett a feje … (okos)
+3|TESZ|Lóvá … (becsap)
+3|EGERE|Szegény, mint a templom …
+3|MOND|Csütörtököt … (felmondja a szolgálatot)
+3|PENDÜL|Egy húron … (egyetértenek)
+3|SZŰRÉT|Kiteszi a … (elküldi)
+3|KÉZZEL|Ölbe tett … (tétlenül)
+3|ERESZTI|Hosszú lére … (szószátyár)
+3|FÜLE|Vaj van a … (bűnös)
+3|HARAP|Fűbe … (meghal)
+3|VERGŐDIK|Zöld ágra … (boldogul)
+3|BORSOT|… tör az orra alá (bosszantja)`
 };
+const SVED=`ALMA|Gyümölcs
+ÁGY|Fekhely
+ÓRA|Időmérő
+KÉZ|Végtag
+LÁB|Ezzel lépünk
+ORR|Szagló~szerv
+FÜL|Halló~szerv
+SZEM|Látó~szerv
+TÉL|Hideg évszak
+NYÁR|Meleg évszak
+ŐSZ|Lomb~hullás
+ESŐ|Csapadék
+JÉG|Fagyott víz
+TEJ|Fehér ital
+MÉZ|Méhek műve
+SAJT|Tej~termék
+KENYÉR|Pékáru
+LEVES|Előétel
+TORTA|Szüli~napi süti
+KÁVÉ|Reggeli ital
+TEA|Forró ital
+BOR|Szőlőből készül
+SÖR|Habos ital
+VÍZ|H₂O
+TŰZ|Lángol
+NAP|Csillagunk
+HOLD|Égi kísérő
+TENGER|Sós víz
+FOLYÓ|Víz~folyás
+DUNA|Nagy folyónk
+TISZA|Szegedi folyó
+RÁBA|Győri folyó
+EGER|Dobó vára
+PÉCS|Mecseki város
+GYŐR|Rábai város
+BÉCS|Osztrák fő~város
+RÓMA|Olasz fő~város
+PÁRIZS|Francia fő~város
+KUTYA|Házőrző
+MACSKA|Egerész
+TEHÉN|Bőg
+KECSKE|Mekeg
+BÉKA|Brekeg
+RÓKA|Ravasz
+MEDVE|Brumi
+NYÚL|Tapsi~füles
+SAS|Ragadozó madár
+VARJÚ|Károg
+GÓLYA|Kelep
+HAL|Úszik
+RÁK|Ollós állat
+ÁSZ|Kártya~lap
+KIRÁLY|Uralkodó
+VÁR|Erőd
+KARD|Fegyver
+NYÍL|Íj lövedéke
+LABDA|Játék~szer
+BAB|Hüvelyes
+BORSÓ|Zöld hüvelyes
+RÉPA|Narancs gyökér
+HAGYMA|Könny~fakasztó
+SZILVA|Lekvár alapja
+MEGGY|Savanyú gyü~mölcs
+DINNYE|Nyári gyü~mölcs
+HÉT|Hét nap
+PERC|60 másod~perc
+MÁJUS|Tavaszi hónap
+JÚNIUS|Nyári hónap
+ÁPRILIS|Bolondos hónap
+SZÍV|Vérpumpa
+VÉR|Piros nedv
+FOG|Rágunk vele
+HAJ|Fejünkön nő
+ING|Gombos ruha
+KALAP|Fejfedő
+CIPŐ|Lábbeli
+KABÁT|Felső~ruha
+SÁL|Nyakra való
+TÁSKA|Retikül
+AUTÓ|Kocsi
+BUSZ|Tömeg~jármű
+HAJÓ|Vízi jármű
+VONAT|Síneken jár
+HÍD|Folyó fölött
+HÁZ|Otthon
+AJTÓ|Bejárat
+ABLAK|Üveges nyílás
+TETŐ|Ház fedele
+PAD|Parki ülés
+SZÉK|Ülőbútor
+ASZTAL|Bútor
+LÁMPA|Világít
+KÖNYV|Olvas~nivaló
+TOLL|Író~eszköz
+PAPÍR|Íróanyag
+LEVÉL|Postán jön
+POSTA|Levelet visz
+ORVOS|Doktor
+TANÁR|Pedagó~gus
+PÉK|Kenyér~sütő
+ÁCS|Fával dolgozik
+SZABÓ|Ruhát varr
+ÉNEK|Dal
+DOB|Ütő~hangszer
+SÍP|Fütyül
+KÉK|Égszín
+PIROS|Pipacs~szín
+ZÖLD|Fűszín
+SÁRGA|Citrom~szín
+FEHÉR|Hószín
+FEKETE|Korom~szín
+EGY|Első szám
+HÁROM|Kettő meg egy
+NÉGY|Kettő meg kettő
+TÍZ|Öt meg öt
+SZÁZ|Tízszer tíz
+EZER|Tízszer száz
+IGEN|Nem ellen~téte
+NEM|Igen ellen~téte
+SZÉP|Csinos
+NAGY|Óriási
+KICSI|Apró
+MELEG|Langyos
+HIDEG|Fagyos
+RÉGI|Ócska
+GYORS|Sebes
+LASSÚ|Csiga~tempó
+ÉHES|Enni kér
+ROSSZ|Nem jó
+ARANY|Nemes~fém
+VAS|Fém
+SÓ|Fűszer
+BOLT|Üzlet
+PIAC|Vásár~tér
+KERT|Virágos~kert
+FA|Erdő része
+ERDŐ|Fák soka~sága
+MEZŐ|Rét
+HEGY|Csúcsa van
+TÓ|Állóvíz
+SZIGET|Vízzel öve~zett
+UTCA|Házsor
+VÁROS|Telepü~lés
+FALU|Kis telepü~lés
+ISKOLA|Tanoda
+TÉRKÉP|Út~mutató lap
+REPÜLŐ|Légi jármű
+RAKÉTA|Űr~jármű
+CSILLAG|Égitest
+OROSZLÁN|Nagy~macska
+ZSIRÁF|Hosszú nyak
+TIGRIS|Csíkos nagy~macska
+MAJOM|Banánevő
+PÓK|Hálót sző
+HANGYA|Szorgos rovar
+MÉH|Döngi~csél
+LEPKE|Pillangó
+SZÁNKÓ|Havas jármű
+KORCSOLYA|Jégen siklik
+FOCI|Labda~rúgás
+SAKK|Tábla~játék
+KÁRTYA|Pakli lapja
+ZONGORA|Billen~tyűs
+GITÁR|Húros hang~szer
+HEGEDŰ|Vonós hang~szer`;
 function parseTopic(id){return DATA[id].split("\n").map(l=>{const [d,w,c]=l.split("|");return {d:+d,word:w.trim(),clue:c.trim(),topic:id};});}
-function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function parseSved(){return SVED.split("\n").map(l=>{const [w,c]=l.split("|");return {d:0,word:w.trim(),clue:c.trim().replace(/~/g,"\u00AD")};});}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function hashStr(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return (h^h>>>16)>>>0;}
+function shuffle(a,rng){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pools(topic,lvl,max){
   const ids=topic==="vegyes"?TOPICS.filter(t=>t.id!=="vegyes").map(t=>t.id):[topic];
   const seen=new Set(),all=[];
@@ -705,7 +1197,7 @@ function pools(topic,lvl,max){
   const ok=all.filter(w=>{const n=Array.from(w.word).length;return n>=3&&n<=max;});
   return {primary:ok.filter(w=>w.d===lvl),secondary:ok.filter(w=>Math.abs(w.d-lvl)===1)};
 }
-function buildOnce(primary,secondary,size,target){
+function buildOnce(primary,secondary,size,target,rng){
   const cells=new Map(),placed=[];let b=null,crossings=0,extra=0;
   const key=(r,c)=>r+","+c,get=(r,c)=>cells.get(key(r,c));
   function fits(L,r,c,dir){
@@ -730,9 +1222,9 @@ function buildOnce(primary,secondary,size,target){
     b=b?{minR:Math.min(b.minR,r),maxR:Math.max(b.maxR,er),minC:Math.min(b.minC,c),maxC:Math.max(b.maxC,ec)}:{minR:r,maxR:er,minC:c,maxC:ec};
     placed.push({word:item.word,clue:item.clue,letters:L,r,c,dir});
   }
-  const prim=shuffle(primary).slice(0,70),sec=shuffle(secondary).slice(0,30);
+  const prim=shuffle(primary,rng).slice(0,70),sec=shuffle(secondary,rng).slice(0,30);
   const head=prim.slice(0,12).sort((x,y)=>Array.from(y.word).length-Array.from(x.word).length)[0];
-  put(head,Array.from(head.word),0,0,Math.random()<.5?"a":"d");
+  put(head,Array.from(head.word),0,0,rng()<.5?"a":"d");
   const order=prim.filter(w=>w!==head).concat(sec);
   for(let pass=0;pass<2&&placed.length<target;pass++){
     for(const item of order){
@@ -751,25 +1243,45 @@ function buildOnce(primary,secondary,size,target){
           }
         }
       }
-      if(best.length){const [r,c,dir]=best[Math.floor(Math.random()*best.length)];put(item,L,r,c,dir);crossings+=bx;if(item.d!==head.d&&!primary.includes(item))extra++;}
+      if(best.length){const [r,c,dir]=best[Math.floor(rng()*best.length)];put(item,L,r,c,dir);crossings+=bx;if(!primary.includes(item))extra++;}
     }
   }
   const w=b.maxC-b.minC+1,h=b.maxR-b.minR+1;
   placed.forEach(p=>{p.r-=b.minR;p.c-=b.minC;});
   return {w,h,words:placed,score:placed.length*100+crossings*12-w*h*.4+Math.min(w,h)*3-extra*25};
 }
-function generate(topic,lvl,compact){
-  const cfg=levelCfg(lvl,compact),{primary,secondary}=pools(topic,lvl,cfg.size);
+// Swedish style: each clue sits in the empty cell just before its word.
+function addClueCells(P){
+  const map=new Map();
+  P.words.forEach(w=>{
+    const r=w.r-(w.dir==="d"?1:0),c=w.c-(w.dir==="a"?1:0),k=r+","+c;
+    if(!map.has(k))map.set(k,{r,c,items:[]});
+    map.get(k).items.push({num:w.num,dir:w.dir});
+  });
+  let minR=0,minC=0;
+  map.forEach(v=>{minR=Math.min(minR,v.r);minC=Math.min(minC,v.c);});
+  P.words.forEach(w=>{w.r-=minR;w.c-=minC;});
+  P.clues=[...map.values()].map(v=>({r:v.r-minR,c:v.c-minC,items:v.items.sort((a,b)=>a.dir<b.dir?-1:1)}));
+  P.h-=minR;P.w-=minC;
+  P.clues.forEach(v=>{P.h=Math.max(P.h,v.r+1);P.w=Math.max(P.w,v.c+1);});
+}
+function generate(topic,lvl,opts){
+  opts=opts||{};const rng=opts.rng||Math.random;
+  let cfg,primary,secondary;
+  if(opts.sved){cfg=SVED_SIZES[lvl];primary=parseSved().filter(w=>{const n=Array.from(w.word).length;return n>=3&&n<=cfg.size;});secondary=[];}
+  else{cfg=levelCfg(lvl,opts.compact);({primary,secondary}=pools(topic,lvl,cfg.size));}
   let best=null;
-  for(let t=0;t<40;t++){const g=buildOnce(primary,secondary,cfg.size,cfg.target);if(!best||g.score>best.score)best=g;}
+  for(let t=0;t<40;t++){const g=buildOnce(primary,secondary,cfg.size,cfg.target,rng);if(!best||g.score>best.score)best=g;}
   const starts=new Map();
   best.words.forEach(wd=>{const k=wd.r*1000+wd.c;if(!starts.has(k))starts.set(k,[]);starts.get(k).push(wd);});
   let n=1;
   [...starts.keys()].sort((a,b)=>a-b).forEach(k=>{starts.get(k).forEach(wd=>wd.num=n);n++;});
   best.words.sort((a,b)=>a.num-b.num||(a.dir<b.dir?-1:1));
-  return {w:best.w,h:best.h,words:best.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))};
+  const P={w:best.w,h:best.h,words:best.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))};
+  if(opts.sved)addClueCells(P);
+  return P;
 }
-if(typeof module!=="undefined")module.exports={generate,pools,levelCfg,LEVELS,TOPICS};
+if(typeof module!=="undefined")module.exports={generate,pools,levelCfg,LEVELS,TOPICS,SVED_SIZES,mulberry32,hashStr,parseSved,DATA};
 </script>
 
 <script>
@@ -781,25 +1293,80 @@ const store={
   set(k,v){try{localStorage.setItem(NS+k,JSON.stringify(v));}catch(e){}},
   del(k){try{localStorage.removeItem(NS+k);}catch(e){}}
 };
-const prefs=Object.assign({lenient:false,theme:"system",lvl:1},store.get("prefs",{}));
+const IS_PAGES=/github\.io$/.test(location.hostname);
+const PUBLIC_URL="https://greativo13.github.io/keresztrejtveny/";
+const PENCIL='<svg class="pc" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.06 4.94l5 5L8.5 20.5H3.5v-5L14.06 4.94zm1.41-1.41l1.77-1.77a1.5 1.5 0 0 1 2.12 0l2.88 2.88a1.5 1.5 0 0 1 0 2.12l-1.77 1.77-5-5z"/></svg>';
+document.querySelectorAll(".pc-slot").forEach(s=>s.outerHTML=PENCIL);
+
+const prefs=Object.assign({lenient:false,theme:"system",lvl:1,big:false},store.get("prefs",{}));
 const savePrefs=()=>store.set("prefs",prefs);
-let stats=Object.assign({stars:0,solved:0,by:{}},store.get("stats",{}));
+const DEF_DAILY={last:null,streak:0,best:0,results:{}};
+let stats=Object.assign({stars:0,solved:0,by:{},coins:10,earned:0,spent:0,hints:0,clean:0,hard:0,sved:0,fast:0,ach:{}},store.get("stats",{}));
+stats.daily=Object.assign({},DEF_DAILY,stats.daily||{});
+stats.ach=stats.ach||{};
+const saveStats=()=>store.set("stats",stats);
+
+const PRICE={letter:3,word:8};
+const REWARD={1:5,2:8,3:12};
+const DAILY_BONUS=10;
 const FOLD={"Á":"A","É":"E","Í":"I","Ó":"O","Ö":"O","Ő":"O","Ú":"U","Ü":"U","Ű":"U"};
 const fold=ch=>FOLD[ch]||ch;
 const RANKS=[[0,"Kezdő"],[3,"Ceruzaforgató"],[8,"Kockatöltő"],[15,"Szóvadász"],[25,"Betűmester"],[40,"Rejtvényfejtő"],[60,"Rejtvénymester"],[85,"Nagymester"],[120,"Legenda"]];
 const rankOf=s=>{let i=0;while(i+1<RANKS.length&&s>=RANKS[i+1][0])i++;return i;};
-const topicName=id=>(TOPICS.find(t=>t.id===id)||{}).name||"";
+const topicName=id=>id==="sved"?"Svéd rejtvény":((TOPICS.find(t=>t.id===id)||{}).name||"");
 const fmt=ms=>{const s=Math.floor(ms/1000),m=Math.floor(s/60);return m+":"+String(s%60).padStart(2,"0");};
 const starsHtml=n=>`<span class="stars" aria-label="${n} csillag">${[0,1,2].map(i=>`<span class="${i<n?"on":""}">★</span>`).join("")}</span>`;
 const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const MONTHS=["január","február","március","április","május","június","július","augusztus","szeptember","október","november","december"];
+const DAYS=["vasárnap","hétfő","kedd","szerda","csütörtök","péntek","szombat"];
+const dayKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const todayKey=()=>dayKey(new Date());
+const keyDate=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d);};
+const prevDay=k=>{const d=keyDate(k);d.setDate(d.getDate()-1);return dayKey(d);};
+const fmtDate=(k,year)=>{const d=keyDate(k);return (year?d.getFullYear()+". ":"")+MONTHS[d.getMonth()]+" "+d.getDate()+"."+(year?"":", "+DAYS[d.getDay()]);};
+const curStreak=()=>{const d=stats.daily,t=todayKey();return (d.last===t||d.last===prevDay(t))?d.streak:0;};
 
-let G=null,cur=null,cellEls=null,screen="home",sheetKind=null,toastT=null;
+const ACH=[
+  {id:"first",name:"Első lépés",desc:"Fejtsd meg az első rejtvényed.",reward:5,test:s=>s.solved>=1},
+  {id:"clean1",name:"Tiszta munka",desc:"Fejts meg egy rejtvényt segítség nélkül.",reward:5,test:s=>s.clean>=1},
+  {id:"ten",name:"Tízes",desc:"Fejts meg 10 rejtvényt.",reward:15,test:s=>s.solved>=10},
+  {id:"clean10",name:"Hibátlan tíz",desc:"Fejts meg 10 rejtvényt segítség nélkül.",reward:25,test:s=>s.clean>=10},
+  {id:"fifty",name:"Ötvenes",desc:"Fejts meg 50 rejtvényt.",reward:50,test:s=>s.solved>=50},
+  {id:"fast",name:"Villámgyors",desc:"Fejts meg egy rejtvényt 3 perc alatt, segítség nélkül.",reward:10,test:s=>s.fast>=1},
+  {id:"hard5",name:"Nehézsúlyú",desc:"Fejts meg 5 nehéz rejtvényt.",reward:15,test:s=>s.hard>=5},
+  {id:"explorer",name:"Felfedező",desc:"Fejts meg legalább egy rejtvényt minden témában.",reward:20,test:s=>TOPICS.every(t=>[1,2,3].some(l=>(s.by[t.id+"|"+l]||{}).solved))},
+  {id:"master",name:"Mindentudó",desc:"Szerezz 3 csillagot minden témában.",reward:50,test:s=>TOPICS.every(t=>[1,2,3].some(l=>((s.by[t.id+"|"+l]||{}).best||0)>=3))},
+  {id:"streak3",name:"Napi rutin",desc:"Fejtsd meg a napi rejtvényt 3 nap egymás után.",reward:10,test:s=>s.daily.best>=3},
+  {id:"streak7",name:"Hűséges fejtő",desc:"Fejtsd meg a napi rejtvényt 7 nap egymás után.",reward:30,test:s=>s.daily.best>=7},
+  {id:"sved5",name:"Svéd mester",desc:"Fejts meg 5 svéd rejtvényt.",reward:15,test:s=>s.sved>=5},
+  {id:"rich",name:"Takarékos",desc:"Gyűjts össze egyszerre 100 ceruzát.",reward:10,test:s=>s.coins>=100}
+];
+
+let G=null,cur=null,cellEls=null,clueEls=null,screen="home",sheetKind=null,resT=null,toastT=null;
+
+/* ---------- small UI helpers ---------- */
+// messages are shown one after another so none gets lost
+const toastQ=[];
+function toast(html,ms){toastQ.push([html,ms||2600]);if(toastQ.length===1)nextToast();}
+function nextToast(){
+  const t=$("toast");if(!toastQ.length){t.hidden=true;return;}
+  const [html,ms]=toastQ[0];t.innerHTML=html;t.hidden=false;
+  clearTimeout(toastT);toastT=setTimeout(()=>{toastQ.shift();t.hidden=true;setTimeout(nextToast,180);},ms);
+}
+function updateCoins(bump){
+  document.querySelectorAll(".coin-n").forEach(e=>e.textContent=stats.coins);
+  if(bump){const c=$("g-coins");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");}
+  updatePrices();
+}
+function addCoins(n){stats.coins+=n;stats.earned+=n;saveStats();updateCoins(true);}
+function checkAch(){
+  const got=[];
+  ACH.forEach(a=>{if(!stats.ach[a.id]&&a.test(stats)){stats.ach[a.id]=todayKey();stats.coins+=a.reward;stats.earned+=a.reward;got.push(a);}});
+  if(got.length){saveStats();updateCoins(true);setTimeout(()=>got.forEach(a=>toast(`Kitüntetés: ${esc(a.name)} · +${a.reward} ${PENCIL}`,3000)),900);}
+}
 
 /* ---------- theme & layout ---------- */
-function syncThemeColor(){
-  const m=document.querySelector('meta[name="theme-color"]');
-  if(m)m.setAttribute("content",getComputedStyle(document.body).backgroundColor);
-}
+function syncThemeColor(){const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",getComputedStyle(document.body).backgroundColor);}
 function applyTheme(user){
   if(prefs.theme==="system"){if(user)document.documentElement.removeAttribute("data-theme");}
   else document.documentElement.setAttribute("data-theme",prefs.theme);
@@ -809,6 +1376,11 @@ function setLayout(){
   const lay=(coarse||window.innerWidth<900)?"mobile":"desk";
   if(document.body.dataset.layout!==lay){document.body.dataset.layout=lay;if(screen==="home")renderHome();}
   sizeGrid();
+}
+function show(name){
+  screen=name;
+  $("home").hidden=name!=="home";$("stats").hidden=name!=="stats";$("game").hidden=name!=="game";
+  window.scrollTo(0,0);
 }
 
 /* ---------- home ---------- */
@@ -821,13 +1393,21 @@ function renderHome(){
     $("rank-bar").style.width=Math.round((s-a)/(b-a)*100)+"%";
     $("rank-next").textContent=`${s} csillag · még ${b-s} a következő szintig`;
   }else{$("rank-bar").style.width="100%";$("rank-next").textContent=`${s} csillag · elérted a legmagasabb szintet`;}
+  updateCoins();
 
   const saved=store.get("game",null),cont=$("continue");
   if(saved&&!saved.done&&saved.P){
     const tot=countCells(saved.P),fill=countFilled(saved);
-    cont.innerHTML=`<span class="c-txt"><small>Folytatás</small><b>${esc(topicName(saved.topic))} · ${LEVELS[saved.lvl].name}</b><span>${Math.round(fill/tot*100)}% kitöltve · ${fmt(saved.ms||0)}</span></span><span class="arrow">›</span>`;
+    cont.innerHTML=`<span class="c-txt"><small>Folytatás</small><b>${esc(topicName(saved.mode==="sved"?"sved":saved.topic))} · ${LEVELS[saved.lvl].name}</b><span>${Math.round(fill/tot*100)}% kitöltve · ${fmt(saved.ms||0)}</span></span><span class="arrow">›</span>`;
     cont.hidden=false;cont.onclick=()=>openGame(saved);
   }else cont.hidden=true;
+
+  renderDaily();
+  const sv=stats.by["sved|"+prefs.lvl]||{solved:0,best:0},S=SVED_SIZES[prefs.lvl];
+  $("sved-card").innerHTML=`<div class="sp-top"><h3>Svéd rejtvény</h3><span class="tag">Új</span></div>
+    <span class="sp-sub">A rövid meghatározások a rácsban, a nyíl mutatja a szó irányát.</span>
+    <span class="sp-meta"><span>${LEVELS[prefs.lvl].name} · ${S.target} szó</span>${starsHtml(sv.best)}<span>${sv.solved?sv.solved+" megfejtve":"Még nem játszottad"}</span></span>`;
+  $("sved-card").onclick=()=>startGame({mode:"sved",topic:"sved",lvl:prefs.lvl});
 
   const d=$("diffs");d.innerHTML="";
   [1,2,3].forEach(lv=>{
@@ -843,84 +1423,172 @@ function renderHome(){
   TOPICS.forEach(tp=>{
     const st=stats.by[tp.id+"|"+prefs.lvl]||{solved:0,best:0},b=document.createElement("button");
     b.type="button";b.className="topic"+(st.solved?" played":"");
-    b.innerHTML=`<span class="mono" aria-hidden="true">${esc(tp.name[0])}</span><span class="t-txt"><b>${esc(tp.name)}</b><span>${esc(tp.desc)}</span><span class="t-stars">${starsHtml(st.best)}<em>${st.solved?st.solved+" megfejtve":"Még nem játszottad"}</em></span></span>`;
-    b.onclick=()=>startTopic(tp.id,prefs.lvl);
+    b.innerHTML=`<span class="mono" aria-hidden="true">${esc(tp.name[0])}</span><span class="t-txt"><b>${esc(tp.name)}${tp.isNew?'<span class="t-new">ÚJ</span>':""}</b><span>${esc(tp.desc)}</span><span class="t-stars">${starsHtml(st.best)}<em>${st.solved?st.solved+" megfejtve":"Még nem játszottad"}</em></span></span>`;
+    b.onclick=()=>startGame({mode:"normal",topic:tp.id,lvl:prefs.lvl});
     t.appendChild(b);
   });
 
   $("pref-lenient").checked=prefs.lenient;
+  $("pref-big").checked=prefs.big;
   document.querySelectorAll("#theme-seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===prefs.theme));
+  renderInstall();
+}
+function renderDaily(){
+  const t=todayKey(),res=stats.daily.results[t],sd=store.get("daily",null),inProg=sd&&sd.date===t&&!sd.done;
+  const streak=curStreak(),card=$("daily-card");
+  let body,btns;
+  if(res&&!res.gaveUp){
+    body=`<span class="sp-meta">${starsHtml(res.stars)}<span>${fmt(res.ms)} · ${res.hints?res.hints+" felfedett betű":"segítség nélkül"}</span></span><span class="sp-sub">Holnap új napi rejtvény vár.</span>`;
+    btns=`<button type="button" class="btn yellow" id="d-share">Eredmény megosztása</button>`;
+  }else if(res&&res.gaveUp){
+    body=`<span class="sp-sub">A mai napit feladtad. Holnap új napi rejtvény vár.</span>`;btns="";
+  }else{
+    const fill=inProg?Math.round(countFilled(sd)/countCells(sd.P)*100):0;
+    body=`<span class="sp-sub">Ma mindenki ugyanezt a rácsot kapja. Vegyes téma, közepes nehézség.</span><span class="sp-meta"><span>+${DAILY_BONUS} ${PENCIL} bónusz</span>${inProg?`<span>${fill}% kitöltve · ${fmt(sd.ms)}</span>`:""}</span>`;
+    btns=`<button type="button" class="btn primary" id="d-play">${inProg?"Folytatás":"Kezdés"}</button>`;
+  }
+  card.innerHTML=`<div class="sp-top"><h3>Napi rejtvény</h3><span class="tag">${streak?streak+" napos sorozat":"Ma"}</span></div>
+    <span class="sp-sub">${fmtDate(t)}</span>${body}${btns?`<div class="sp-btns">${btns}</div>`:""}`;
+  const p=$("d-play");if(p)p.onclick=()=>startGame({mode:"daily",topic:"vegyes",lvl:2});
+  const sh=$("d-share");if(sh)sh.onclick=()=>shareResult(shareText({mode:"daily",date:t,ms:res.ms,hints:res.hints},res.stars));
 }
 function countCells(P){const s=new Set();P.words.forEach(w=>w.letters.forEach((_,i)=>s.add((w.r+(w.dir==="d"?i:0))+","+(w.c+(w.dir==="a"?i:0)))));return s.size;}
 function countFilled(g){let n=0;g.entries.forEach(row=>row.forEach(v=>{if(v)n++;}));return n;}
 
-function startTopic(topic,lvl){
+/* ---------- install (GitHub Pages only) ---------- */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;renderInstall();});
+function renderInstall(){
+  const row=$("install-row");
+  const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(!IS_PAGES||standalone){row.hidden=true;return;}
+  row.hidden=false;
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+  $("install-btn").hidden=!deferredPrompt;
+  $("install-txt").textContent=deferredPrompt?"Ikonnal a kezdőképernyőn, internet nélkül is működik."
+    :ios?"Safariban: Megosztás gomb, majd „Főképernyőhöz adás”. Utána internet nélkül is működik."
+    :"A böngésző menüjében válaszd a „Telepítés” vagy a „Hozzáadás a kezdőképernyőhöz” pontot.";
+}
+$("install-btn").onclick=()=>{if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null;renderInstall();});};
+if(IS_PAGES&&"serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}
+
+/* ---------- results screen ---------- */
+function renderStats(){
+  const d=stats.daily;
+  $("tiles").innerHTML=[
+    ["Megfejtve",stats.solved,`ebből ${stats.clean} segítség nélkül`],
+    ["Csillag",stats.stars,`Szint ${rankOf(stats.stars)+1} · ${RANKS[rankOf(stats.stars)][1]}`],
+    ["Ceruza",stats.coins,`összesen ${stats.earned} gyűjtve, ${stats.spent} elköltve`],
+    ["Napi sorozat",curStreak(),`leghosszabb: ${d.best} nap`]
+  ].map(([a,b,c])=>`<div class="tile"><small>${a}</small><b>${b}</b><span>${c}</span></div>`).join("");
+  const rows=TOPICS.map(t=>({id:t.id,name:t.name})).concat([{id:"sved",name:"Svéd rejtvény"}]);
+  $("best-table").innerHTML=`<thead><tr><th>Téma</th>${[1,2,3].map(l=>`<th>${LEVELS[l].name}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td>${[1,2,3].map(l=>{const st=stats.by[r.id+"|"+l];return st&&st.bestMs?`<td>${fmt(st.bestMs)} ${starsHtml(st.best)}</td>`:`<td class="none">–</td>`;}).join("")}</tr>`).join("")}</tbody>`;
+  const got=ACH.filter(a=>stats.ach[a.id]).length;
+  $("ach-title").textContent=`Kitüntetések · ${got}/${ACH.length}`;
+  $("achs").innerHTML=ACH.map(a=>{const g=stats.ach[a.id];return `<div class="ach ${g?"got":""}"><span class="medal" aria-hidden="true">${g?"★":"?"}</span><span class="a-txt"><b>${esc(a.name)}</b><span>${esc(a.desc)}${g?` · ${esc(fmtDate(g,true))}`:""}</span></span><span class="rw">+${a.reward} ${PENCIL}</span></div>`;}).join("");
+}
+$("open-stats").onclick=()=>{renderStats();show("stats");};
+$("stats-back").onclick=()=>{show("home");renderHome();};
+
+/* ---------- starting games ---------- */
+function startGame(spec){
+  if(spec.mode==="daily"){
+    const t=todayKey(),sd=store.get("daily",null);
+    if(stats.daily.results[t])return;
+    if(sd&&sd.date===t&&!sd.done&&sd.P){openGame(sd);return;}
+    newGame(spec);return;
+  }
   const saved=store.get("game",null);
   if(saved&&!saved.done&&saved.P){
-    if(saved.topic===topic&&saved.lvl===lvl){openGame(saved);return;}
+    if(saved.mode===spec.mode&&saved.topic===spec.topic&&saved.lvl===spec.lvl){openGame(saved);return;}
     if(countFilled(saved)>0){
-      confirmSheet("Félbehagyott rejtvényed van",`A ${topicName(saved.topic)} · ${LEVELS[saved.lvl].name} rejtvényed elvész, ha újat kezdesz.`,"Új rejtvény",()=>newGame(topic,lvl));
+      confirmSheet("Félbehagyott rejtvényed van",`A „${topicName(saved.mode==="sved"?"sved":saved.topic)} · ${LEVELS[saved.lvl].name}” rejtvényed elvész, ha újat kezdesz.`,"Új rejtvény",()=>newGame(spec));
       return;
     }
   }
-  newGame(topic,lvl);
+  newGame(spec);
 }
-function newGame(topic,lvl){
-  const P=generate(topic,lvl,document.body.dataset.layout==="mobile");
-  const g={topic,lvl,P,entries:Array.from({length:P.h},()=>Array(P.w).fill("")),rev:{},marks:{},ms:0,done:false,gaveUp:false,hints:0};
-  store.set("game",g);
+function newGame(spec){
+  const compact=document.body.dataset.layout==="mobile";
+  let P,date;
+  if(spec.mode==="daily"){date=todayKey();P=generate("vegyes",2,{compact:true,rng:mulberry32(hashStr("rejtvenyfuzet-"+date))});}
+  else if(spec.mode==="sved")P=generate("sved",spec.lvl,{sved:true});
+  else P=generate(spec.topic,spec.lvl,{compact});
+  const g={mode:spec.mode,topic:spec.topic,lvl:spec.lvl,date,P,entries:Array.from({length:P.h},()=>Array(P.w).fill("")),rev:{},marks:{},rewarded:{},wordCoins:0,ms:0,done:false,gaveUp:false,hints:0};
+  store.set(spec.mode==="daily"?"daily":"game",g);
   openGame(g);
 }
 
 /* ---------- game ---------- */
+const isSved=()=>G&&G.mode==="sved";
 function openGame(g){
-  G=g;
+  G=g;G.rewarded=G.rewarded||{};G.wordCoins=G.wordCoins||0;
   G.sol=Array.from({length:G.P.h},()=>Array(G.P.w).fill(null));
   G.P.words.forEach(w=>w.letters.forEach((ch,i)=>{G.sol[w.r+(w.dir==="d"?i:0)][w.c+(w.dir==="a"?i:0)]=ch;}));
-  screen="game";
-  $("home").hidden=true;$("game").hidden=false;
-  $("g-topic").textContent=topicName(G.topic);
-  clearTimeout(toastT);levelLine();
+  show("game");closeSheet();
+  $("g-topic").textContent=G.mode==="daily"?"Napi rejtvény":topicName(G.mode==="sved"?"sved":G.topic);
   $("game").classList.toggle("done",!!G.done);
+  clearTimeout(resT);levelLine();
   renderGrid();renderClues();
   const first=G.P.words[0];select(first.r,first.c,first.dir);
-  updateProgress();setLayout();tickClock();
-  window.scrollTo(0,0);
+  updateProgress();setLayout();tickClock();updateCoins();
 }
-function backHome(){
-  saveGame();closeSheet();
-  screen="home";$("game").hidden=true;$("home").hidden=false;
-  renderHome();window.scrollTo(0,0);
+function levelLine(){
+  const t=$("g-level");t.classList.remove("res");
+  t.textContent=G.mode==="daily"?`${fmtDate(G.date).split(",")[0]} · ${G.P.words.length} szó`:`${LEVELS[G.lvl].name} · ${G.P.words.length} szó`;
 }
+function backHome(){saveGame();closeSheet();show("home");renderHome();}
+function slotName(){return G.mode==="daily"?"daily":"game";}
 function saveGame(){
   if(!G)return;
-  if(G.done){store.del("game");return;}
+  if(G.done){store.del(slotName());return;}
   const {sol,...rest}=G;
-  rest.P={w:G.P.w,h:G.P.h,words:G.P.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))};
-  store.set("game",rest);
+  rest.P={w:G.P.w,h:G.P.h,clues:G.P.clues,words:G.P.words.map(({word,clue,letters,r,c,dir,num})=>({word,clue,letters,r,c,dir,num}))};
+  store.set(slotName(),rest);
 }
 
 function renderGrid(){
   const g=$("grid");g.innerHTML="";g.style.setProperty("--cols",G.P.w);
   cellEls=Array.from({length:G.P.h},()=>Array(G.P.w).fill(null));
-  const nums={};G.P.words.forEach(w=>nums[w.r+","+w.c]=w.num);
+  clueEls={};
+  const nums={};if(!isSved())G.P.words.forEach(w=>nums[w.r+","+w.c]=w.num);
+  const clueAt={};(G.P.clues||[]).forEach(v=>clueAt[v.r+","+v.c]=v);
   for(let r=0;r<G.P.h;r++)for(let c=0;c<G.P.w;c++){
-    const d=document.createElement("div");
+    const d=document.createElement("div"),k=r+","+c;
+    if(clueAt[k]){
+      d.className="cell clue";
+      clueAt[k].items.forEach(it=>{
+        const w=G.P.words.find(x=>x.num===it.num&&x.dir===it.dir);
+        const s=document.createElement("span");s.className="cl "+it.dir;
+        s.innerHTML=`${esc(w.clue)}<i>${it.dir==="a"?"›":"⌄"}</i>`;
+        d.appendChild(s);clueEls[it.num+it.dir]=s;
+      });
+      d.addEventListener("click",()=>{
+        const items=clueAt[k].items;
+        const curW=cur&&wordAt(cur.r,cur.c,cur.dir);
+        let idx=items.findIndex(it=>curW&&curW.num===it.num&&curW.dir===it.dir);
+        const it=items[(idx+1)%items.length],w=G.P.words.find(x=>x.num===it.num&&x.dir===it.dir);
+        const empty=cellsOf(w).find(([rr,cc])=>!G.entries[rr][cc]);
+        const [rr,cc]=empty||[w.r,w.c];select(rr,cc,w.dir);
+      });
+      g.appendChild(d);continue;
+    }
     if(!G.sol[r][c]){d.className="cell void";g.appendChild(d);continue;}
     d.className="cell";
-    if(nums[r+","+c])d.insertAdjacentHTML("beforeend",`<span class="num">${nums[r+","+c]}</span>`);
+    if(nums[k])d.insertAdjacentHTML("beforeend",`<span class="num">${nums[k]}</span>`);
     const ch=document.createElement("span");ch.className="ch";ch.textContent=G.entries[r][c];d.appendChild(ch);
     d.addEventListener("click",()=>{if(cur&&cur.r===r&&cur.c===c)toggleDir();else select(r,c,cur?cur.dir:"a");});
     g.appendChild(d);cellEls[r][c]=d;
   }
   paintMarks();
 }
+const marker=w=>isSved()?(w.dir==="a"?"→":"↓"):w.num+".";
 function renderClues(){
   ["a","d"].forEach(dir=>{
     const ol=$("list-"+dir);ol.innerHTML="";
     G.P.words.filter(w=>w.dir===dir).forEach(w=>{
       const li=document.createElement("li");
-      li.innerHTML=`<b>${w.num}.</b><span class="c">${esc(w.clue)} <span class="n">(${w.letters.length})</span></span>`;
+      li.innerHTML=`<b>${marker(w)}</b><span class="c">${esc(w.clue)} <span class="n">(${w.letters.length})</span></span>`;
       li.onclick=()=>select(w.r,w.c,dir);
       ol.appendChild(li);w._li=li;
     });
@@ -930,7 +1598,7 @@ function renderClues(){
 function sizeGrid(){
   if(screen!=="game"||!G)return;
   const a=$("gridarea"),W=a.clientWidth-16,H=a.clientHeight-16;
-  const cell=Math.max(14,Math.floor(Math.min((W-2)/G.P.w-1,(H-2)/G.P.h-1,52)));
+  const cell=Math.max(14,Math.floor(Math.min((W-2)/G.P.w-1,(H-2)/G.P.h-1,isSved()?58:52)));
   $("grid").style.setProperty("--cell",cell+"px");
 }
 
@@ -945,15 +1613,28 @@ function select(r,c,dir){
 function toggleDir(){const nd=cur.dir==="a"?"d":"a";if(wordAt(cur.r,cur.c,nd)){cur.dir=nd;highlight();}}
 function highlight(){
   document.querySelectorAll(".cell.inword,.cell.cur").forEach(e=>e.classList.remove("inword","cur"));
-  document.querySelectorAll(".clue-list li.active").forEach(e=>e.classList.remove("active"));
+  document.querySelectorAll(".clue-list li.active,.cell.clue .cl.on").forEach(e=>e.classList.remove("active","on"));
   const w=wordAt(cur.r,cur.c,cur.dir);
   if(w){
     cellsOf(w).forEach(([r,c])=>cellEls[r][c].classList.add("inword"));
     if(w._li){w._li.classList.add("active");if(document.body.dataset.layout==="desk")w._li.scrollIntoView({block:"nearest"});}
-    $("cb-tag").textContent=`${w.num}. ${w.dir==="a"?"vízszintes":"függőleges"} · ${w.letters.length} betű`;
+    if(clueEls&&clueEls[w.num+w.dir])clueEls[w.num+w.dir].classList.add("on");
+    $("cb-tag").textContent=isSved()?`${w.dir==="a"?"→ vízszintes":"↓ függőleges"} · ${w.letters.length} betű`:`${w.num}. ${w.dir==="a"?"vízszintes":"függőleges"} · ${w.letters.length} betű`;
     $("cb-txt").textContent=w.clue;
   }
   cellEls[cur.r][cur.c].classList.add("cur");
+  updatePrices();
+}
+function wordPrice(){
+  if(!G||!cur)return PRICE.word;
+  const w=wordAt(cur.r,cur.c,cur.dir);if(!w)return PRICE.word;
+  const miss=cellsOf(w).filter(([r,c])=>G.entries[r][c]!==G.sol[r][c]).length;
+  return Math.max(miss?PRICE.letter:0,Math.min(PRICE.word,miss*PRICE.letter));
+}
+function updatePrices(){
+  if(!G)return;
+  $("a-letter").innerHTML=`Betű <em>${PENCIL}${PRICE.letter}</em>`;
+  $("a-word").innerHTML=`Szó <em>${PENCIL}${wordPrice()}</em>`;
 }
 function setCell(r,c,v,pop){
   G.entries[r][c]=v;
@@ -970,7 +1651,7 @@ function moveInWord(back){
 function wordOrder(){return [...G.P.words.filter(w=>w.dir==="a"),...G.P.words.filter(w=>w.dir==="d")];}
 function nextWord(back,preferEmpty){
   const order=wordOrder(),w=wordAt(cur.r,cur.c,cur.dir);
-  let i=order.indexOf(w);
+  const i=order.indexOf(w);
   for(let k=1;k<=order.length;k++){
     const nw=order[(i+(back?-k:k)+order.length*2)%order.length];
     const empty=cellsOf(nw).find(([r,c])=>!G.entries[r][c]);
@@ -985,7 +1666,6 @@ function typeLetter(ch){
     const w=wordAt(cur.r,cur.c,cur.dir);
     if(!w||cellsOf(w).every(([r,c])=>G.entries[r][c]))nextWord(false,true);
   }else{
-    // skip over revealed letters
     let guard=0;while(G.rev[cur.r+","+cur.c]&&guard++<20&&moveInWord(false));
   }
   afterChange();
@@ -1003,9 +1683,23 @@ function step(dr,dc){
 }
 const matches=(r,c)=>{const v=G.entries[r][c],s=G.sol[r][c];return !!v&&(v===s||(prefs.lenient&&fold(v)===fold(s)));};
 function afterChange(){
-  updateProgress();markFull();
+  updateProgress();markFull();rewardWords();updatePrices();
   if(!G.done&&allCells().every(([r,c])=>matches(r,c))){finish(false);return;}
   saveGame();
+}
+// +1 pencil for every word the player completed correctly without revealed letters
+function rewardWords(){
+  if(G.done)return;
+  let n=0;
+  G.P.words.forEach(w=>{
+    const id=w.num+w.dir;if(G.rewarded[id])return;
+    const cs=cellsOf(w);
+    if(cs.every(([r,c])=>matches(r,c))&&!cs.some(([r,c])=>G.rev[r+","+c])){
+      G.rewarded[id]=1;n++;
+      cs.forEach(([r,c],i)=>{const el=cellEls[r][c];el.classList.remove("won");void el.offsetWidth;el.style.animationDelay=(i*40)+"ms";el.classList.add("won");});
+    }
+  });
+  if(n){G.wordCoins+=n;addCoins(n);}
 }
 function updateProgress(){const cs=allCells();$("g-prog").style.width=Math.round(cs.filter(([r,c])=>G.entries[r][c]).length/cs.length*100)+"%";}
 function markFull(){G.P.words.forEach(w=>w._li&&w._li.classList.toggle("full",cellsOf(w).every(([r,c])=>G.entries[r][c])));}
@@ -1023,35 +1717,77 @@ function check(){
   });
   paintMarks();
   if(!bad&&!em){finish(false);return;}
-  toast(`<span class="pill ok">${ok} jó</span><span class="pill no">${bad} hibás</span><span class="pill em">${em} üres</span>`);
+  const t=$("g-level");
+  t.innerHTML=`<span class="pill ok">${ok} jó</span><span class="pill no">${bad} hibás</span><span class="pill em">${em} üres</span>`;t.classList.add("res");
+  clearTimeout(resT);resT=setTimeout(levelLine,4500);
   saveGame();
 }
-function toast(html){
-  const t=$("g-level");t.innerHTML=html;t.classList.add("res");
-  clearTimeout(toastT);toastT=setTimeout(levelLine,4500);
-}
-function levelLine(){const t=$("g-level");t.classList.remove("res");t.textContent=`${LEVELS[G.lvl].name} · ${G.P.words.length} szó`;}
-function reveal(list){
+function reveal(list,price){
   if(G.done)return;
-  let n=0;
-  list.forEach(([r,c])=>{if(G.entries[r][c]===G.sol[r][c])return;setCell(r,c,G.sol[r][c],true);G.rev[r+","+c]=true;n++;});
-  G.hints+=n;paintMarks();afterChange();
+  const todo=list.filter(([r,c])=>G.entries[r][c]!==G.sol[r][c]);
+  if(!todo.length){toast(list.length>1?"Ez a szó már jó.":"Ez a betű már jó.");return;}
+  if(stats.coins<price){noCoinsSheet(price);return;}
+  stats.coins-=price;stats.spent+=price;stats.hints+=todo.length;saveStats();updateCoins(true);
+  todo.forEach(([r,c])=>{setCell(r,c,G.sol[r][c],true);G.rev[r+","+c]=true;});
+  G.hints+=todo.length;paintMarks();afterChange();
+}
+function noCoinsSheet(price){
+  openSheet("coins",`<h2>Nincs elég ceruzád</h2>
+  <p>Ehhez ${price} ceruza kell, neked most ${stats.coins} van.</p>
+  <div class="panel">
+    <div class="rw-row"><span>Helyes szó saját erőből</span><b>+1 ${PENCIL}</b></div>
+    <div class="rw-row"><span>Megfejtés (nehézség szerint)</span><b>+5–12 ${PENCIL}</b></div>
+    <div class="rw-row"><span>Csillagonként</span><b>+2 ${PENCIL}</b></div>
+    <div class="rw-row"><span>Napi rejtvény</span><b>+${DAILY_BONUS} ${PENCIL}</b></div>
+    <div class="rw-row"><span>Kitüntetések</span><b>+5–50 ${PENCIL}</b></div>
+  </div>
+  <p>Tipp: az Ellenőrzés ingyenes, és megmutatja, melyik betű hibás.</p>
+  <div class="btns"><button type="button" class="btn primary" id="nc-ok">Rendben</button></div>`);
+  $("nc-ok").onclick=closeSheet;
 }
 function finish(gaveUp){
-  G.done=true;G.gaveUp=gaveUp;
+  G.done=true;G.gaveUp=gaveUp;clearTimeout(resT);levelLine();
   $("game").classList.add("done");
   if(!gaveUp)allCells().forEach(([r,c])=>{G.marks[r+","+c]="ok";});
   paintMarks();
   const stars=gaveUp?0:G.hints===0?3:G.hints<=3?2:1;
   const before=rankOf(stats.stars);
+  const rewards=[];
   if(!gaveUp){
-    const k=G.topic+"|"+G.lvl,st=stats.by[k]||{solved:0,best:0};
-    st.solved++;st.best=Math.max(st.best,stars);stats.by[k]=st;
-    stats.stars+=stars;stats.solved++;store.set("stats",stats);
+    const k=(G.mode==="sved"?"sved":G.topic)+"|"+G.lvl,st=stats.by[k]||{solved:0,best:0};
+    st.solved++;st.best=Math.max(st.best,stars);st.bestMs=st.bestMs?Math.min(st.bestMs,G.ms):G.ms;stats.by[k]=st;
+    stats.stars+=stars;stats.solved++;
+    if(!G.hints)stats.clean++;
+    if(G.lvl===3&&G.mode!=="daily")stats.hard++;
+    if(G.mode==="sved")stats.sved++;
+    if(!G.hints&&G.ms<180000)stats.fast++;
+    rewards.push(["Megfejtés",REWARD[G.lvl]]);
+    if(stars)rewards.push([`${stars} csillag`,stars*2]);
+    if(G.mode==="daily")rewards.push(["Napi bónusz",DAILY_BONUS]);
   }
-  store.del("game");
+  if(G.mode==="daily"){
+    const d=stats.daily;
+    d.results[G.date]=gaveUp?{gaveUp:true}:{stars,ms:G.ms,hints:G.hints};
+    if(!gaveUp&&d.last!==G.date){d.streak=(d.last===prevDay(G.date))?d.streak+1:1;d.last=G.date;d.best=Math.max(d.best,d.streak);}
+  }
+  const total=rewards.reduce((a,r)=>a+r[1],0);
+  if(total){stats.coins+=total;stats.earned+=total;}
+  saveStats();updateCoins(!!total);
+  store.del(slotName());
   const after=rankOf(stats.stars);
-  setTimeout(()=>winSheet(stars,gaveUp,after>before?after:null),gaveUp?0:450);
+  setTimeout(()=>{winSheet(stars,gaveUp,after>before?after:null,rewards,total);checkAch();},gaveUp?0:550);
+}
+
+/* ---------- sharing ---------- */
+function shareText(g,stars){
+  const title=g.mode==="daily"?`Napi rejtvény, ${fmtDate(g.date,true)}`:g.mode==="sved"?`Svéd rejtvény · ${LEVELS[g.lvl].name}`:`${topicName(g.topic)} · ${LEVELS[g.lvl].name}`;
+  return `Rejtvényfüzet – ${title}\n${"★".repeat(stars)}${"☆".repeat(3-stars)} · ${fmt(g.ms)} · ${g.hints?g.hints+" felfedett betű":"segítség nélkül"}\n${PUBLIC_URL}`;
+}
+async function shareResult(text){
+  try{if(navigator.share&&IS_PAGES){await navigator.share({text});return;}}catch(e){if(e&&e.name==="AbortError")return;}
+  try{await navigator.clipboard.writeText(text);toast("Eredmény kimásolva, beillesztheted bárhová.");return;}catch(e){}
+  openSheet("share",`<h2>Másold ki az eredményt</h2><textarea id="sh-t" rows="4" readonly>${esc(text)}</textarea><div class="btns"><button type="button" class="btn" id="sh-c">Bezárás</button></div>`);
+  const t=$("sh-t");t.focus();t.select();$("sh-c").onclick=closeSheet;
 }
 
 /* ---------- sheets ---------- */
@@ -1066,35 +1802,47 @@ function confirmSheet(title,text,yes,fn){
   $("s-yes").onclick=()=>{closeSheet();fn();};$("s-no").onclick=closeSheet;
 }
 function menuSheet(){
-  openSheet("menu",`<h2>${esc(topicName(G.topic))} · ${LEVELS[G.lvl].name}</h2>
+  const daily=G.mode==="daily";
+  openSheet("menu",`<h2>${esc($("g-topic").textContent)}</h2>
   <div class="menu-row"><label for="m-len">Ékezet nélkül is elfogadja</label><span class="switch"><input type="checkbox" id="m-len" ${prefs.lenient?"checked":""}><span></span></span></div>
   <div class="btns">
-    <button type="button" class="btn" id="m-new">Új rejtvény ebben a témában</button>
-    <button type="button" class="btn warn" id="m-solve" ${G.done?"disabled":""}>Megoldás megmutatása</button>
+    ${daily?"":`<button type="button" class="btn" id="m-new">Új rejtvény ugyanitt</button>`}
+    <button type="button" class="btn warn" id="m-solve" ${G.done?"disabled":""}>Megoldás megmutatása (nem jár érte jutalom)</button>
     <button type="button" class="btn" id="m-home">Vissza a menübe</button>
     <button type="button" class="btn primary" id="m-close">Folytatom</button>
   </div>`);
   $("m-len").onchange=e=>{prefs.lenient=e.target.checked;savePrefs();if(!G.done)afterChange();};
-  $("m-new").onclick=()=>{if(!G.done&&countFilled(G)>0)confirmSheet("Új rejtvényt kezdesz?","A mostani állás elvész.","Új rejtvény",()=>newGame(G.topic,G.lvl));else{closeSheet();newGame(G.topic,G.lvl);}};
-  $("m-solve").onclick=()=>confirmSheet("Megnézed a megoldást?","Ezért a rejtvényért nem jár csillag.","Megoldás",()=>{allCells().forEach(([r,c])=>{if(!matches(r,c)){setCell(r,c,G.sol[r][c]);G.rev[r+","+c]=true;}});finish(true);});
+  const nb=$("m-new");if(nb)nb.onclick=()=>{const spec={mode:G.mode,topic:G.topic,lvl:G.lvl};if(!G.done&&countFilled(G)>0)confirmSheet("Új rejtvényt kezdesz?","A mostani állás elvész.","Új rejtvény",()=>newGame(spec));else{closeSheet();newGame(spec);}};
+  $("m-solve").onclick=()=>confirmSheet("Megnézed a megoldást?",daily?"A napi sorozatod megszakad, és nem jár érte csillag vagy ceruza.":"Ezért a rejtvényért nem jár csillag vagy ceruza.","Megoldás",()=>{allCells().forEach(([r,c])=>{if(!matches(r,c)){setCell(r,c,G.sol[r][c]);G.rev[r+","+c]=true;}});finish(true);});
   $("m-home").onclick=backHome;
   $("m-close").onclick=closeSheet;
 }
 function listSheet(){
-  const sec=dir=>`<div class="clue-sec"><h3>${dir==="a"?"Vízszintes":"Függőleges"}</h3><ol class="clue-list">${G.P.words.filter(w=>w.dir===dir).map(w=>{const full=cellsOf(w).every(([r,c])=>G.entries[r][c]);const act=wordAt(cur.r,cur.c,cur.dir)===w;return `<li data-n="${w.num}" data-d="${dir}" class="${full?"full":""} ${act?"active":""}"><b>${w.num}.</b><span class="c">${esc(w.clue)} <span class="n">(${w.letters.length})</span></span></li>`;}).join("")}</ol></div>`;
+  const sec=dir=>`<div class="clue-sec"><h3>${dir==="a"?"Vízszintes":"Függőleges"}</h3><ol class="clue-list">${G.P.words.filter(w=>w.dir===dir).map(w=>{const full=cellsOf(w).every(([r,c])=>G.entries[r][c]);const act=wordAt(cur.r,cur.c,cur.dir)===w;return `<li data-n="${w.num}" data-d="${dir}" class="${full?"full":""} ${act?"active":""}"><b>${marker(w)}</b><span class="c">${esc(w.clue)} <span class="n">(${w.letters.length})</span></span></li>`;}).join("")}</ol></div>`;
   openSheet("list",`<h2>Meghatározások</h2>${sec("a")}${sec("d")}<button type="button" class="btn" id="l-close">Bezárás</button>`);
   $("sheet").querySelectorAll("li").forEach(li=>li.onclick=()=>{const w=G.P.words.find(x=>x.num===+li.dataset.n&&x.dir===li.dataset.d);closeSheet();select(w.r,w.c,w.dir);});
   $("l-close").onclick=closeSheet;
 }
-function winSheet(stars,gaveUp,newRank){
-  const head=gaveUp
-    ?`<h2>Itt a megoldás</h2><p>Nézd át nyugodtan a rácsot. Legközelebb biztosan megy!</p>`
-    :`<div class="win-stars" aria-label="${stars} csillag">${[0,1,2].map(i=>`<span class="${i<stars?"on":""}">★</span>`).join("")}</div>
+function winSheet(stars,gaveUp,newRank,rewards,total){
+  const daily=G.mode==="daily";
+  let head;
+  if(gaveUp){
+    head=`<h2>Itt a megoldás</h2><p>Nézd át nyugodtan a rácsot. Legközelebb biztosan megy!</p>`;
+  }else{
+    const rows=rewards.map(([n,v])=>`<div class="rw-row"><span>${esc(n)}</span><b>+${v} ${PENCIL}</b></div>`).join("");
+    head=`<div class="win-stars" aria-label="${stars} csillag">${[0,1,2].map(i=>`<span class="${i<stars?"on":""}">★</span>`).join("")}</div>
       <h2>Megfejtetted!</h2>
-      <p>${fmt(G.ms)} alatt, ${G.hints?G.hints+" felfedett betűvel":"segítség nélkül"}.${stars<3?" Három csillag segítség nélkül jár.":""}</p>
-      <p class="win-rank">${newRank!==null?`Szintet léptél! Szint ${newRank+1} · ${RANKS[newRank][1]}`:`+${stars} csillag · összesen ${stats.stars}`}</p>`;
-  openSheet("win",`${head}<div class="btns"><button type="button" class="btn primary" id="w-next">Következő rejtvény</button><button type="button" class="btn" id="w-grid">Megnézem a rácsot</button><button type="button" class="btn" id="w-home">Vissza a menübe</button></div>`);
-  $("w-next").onclick=()=>{closeSheet();newGame(G.topic,G.lvl);};
+      <p>${fmt(G.ms)} alatt, ${G.hints?G.hints+" felfedett betűvel":"segítség nélkül"}.${stars<3?" Három csillag segítség nélkül jár.":""}${daily?` Napi sorozat: ${stats.daily.streak} nap.`:""}</p>
+      <div class="panel">${G.wordCoins?`<div class="rw-row muted"><span>Helyes szavak (már jóváírva)</span><b>+${G.wordCoins} ${PENCIL}</b></div>`:""}${rows}<div class="rw-row total"><span>Most kapsz</span><b>+${total} ${PENCIL}</b></div></div>
+      <p class="win-rank">${newRank!==null?`Szintet léptél! Szint ${newRank+1} · ${RANKS[newRank][1]}`:`Összesen ${stats.stars} csillag · ${stats.coins} ceruza`}</p>`;
+  }
+  openSheet("win",`${head}<div class="btns">
+    ${gaveUp?"":`<button type="button" class="btn yellow" id="w-share">Eredmény megosztása</button>`}
+    ${daily?"":`<button type="button" class="btn primary" id="w-next">Következő rejtvény</button>`}
+    <button type="button" class="btn" id="w-grid">Megnézem a rácsot</button>
+    <button type="button" class="btn ${daily?"primary":""}" id="w-home">Vissza a menübe</button></div>`);
+  const sh=$("w-share");if(sh)sh.onclick=()=>shareResult(shareText(G,stars));
+  const nx=$("w-next");if(nx)nx.onclick=()=>{closeSheet();newGame({mode:G.mode,topic:G.topic,lvl:G.lvl});};
   $("w-grid").onclick=closeSheet;
   $("w-home").onclick=backHome;
 }
@@ -1139,10 +1887,10 @@ document.addEventListener("keydown",e=>{
 let last=Date.now(),tickN=0;
 function tickClock(){if(G)$("g-clock").textContent=fmt(G.ms);}
 setInterval(()=>{
-  const n=Date.now(),dt=n-last;last=n;
+  const n=Date.now(),dt=Math.min(n-last,5000);last=n;
   if(screen==="game"&&G&&!G.done&&!document.hidden){G.ms+=dt;tickClock();if(++tickN%5===0)saveGame();}
 },1000);
-document.addEventListener("visibilitychange",()=>{last=Date.now();if(document.hidden)saveGame();});
+document.addEventListener("visibilitychange",()=>{last=Date.now();if(document.hidden)saveGame();else if(screen==="home")renderHome();});
 window.addEventListener("pagehide",saveGame);
 
 /* ---------- wiring ---------- */
@@ -1152,18 +1900,20 @@ $("cb-prev").onclick=()=>nextWord(true,false);
 $("cb-next").onclick=()=>nextWord(false,false);
 $("cb-mid").onclick=toggleDir;
 $("a-check").onclick=check;
-$("a-letter").onclick=()=>reveal([[cur.r,cur.c]]);
-$("a-word").onclick=()=>{const w=wordAt(cur.r,cur.c,cur.dir);if(w)reveal(cellsOf(w));};
+$("a-letter").onclick=()=>reveal([[cur.r,cur.c]],PRICE.letter);
+$("a-word").onclick=()=>{const w=wordAt(cur.r,cur.c,cur.dir);if(w)reveal(cellsOf(w),wordPrice());};
 $("a-list").onclick=listSheet;
 $("pref-lenient").onchange=e=>{prefs.lenient=e.target.checked;savePrefs();};
+$("pref-big").onchange=e=>{prefs.big=e.target.checked;savePrefs();document.body.classList.toggle("big",prefs.big);};
 document.querySelectorAll("#theme-seg button").forEach(b=>b.onclick=()=>{prefs.theme=b.dataset.v;savePrefs();applyTheme(true);syncThemeColor();renderHome();});
 window.addEventListener("resize",setLayout);
 if(window.ResizeObserver)new ResizeObserver(sizeGrid).observe($("gridarea"));
 
+document.body.classList.toggle("big",!!prefs.big);
 applyTheme(false);
 setLayout();
+renderHome();
 syncThemeColor();
 try{window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",syncThemeColor);}catch(e){}
-renderHome();
 })();
 </script>
