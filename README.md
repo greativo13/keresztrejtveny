@@ -8,7 +8,7 @@ Magyar nyelvű keresztrejtvény-játék a böngészőben, telefonra optimalizál
 
 - **Kalandtérkép:** témánként 15 pálya, a végén főnök-rejtvénnyel
 - **Animációk és hangok:** repülő ceruzák, kombó, konfetti, rázkódó hibás betűk, kikapcsolható hangok és rezgés
-- **Bolt:** rácsminták, betűtípusok, profilkeretek ceruzáért; új segítségek (magánhangzók, első betűk)
+- **Bolt:** rácsminták, betűtípusok, profilkeretek ceruzáért; a Súgóban fizetős információ a szóról (betűminta, első és utolsó betű, összekevert betűk)
 - **Napi kihívások** és **szerencsekerék**
 - **Időfutam:** 3 perc, minél több szó
 - **Párbaj:** linkkel küldhető kihívás, a barát ugyanazt a rácsot kapja
