@@ -554,17 +554,79 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
 .more-help summary{cursor:pointer;font:800 15px/1.2 var(--f-display);color:var(--muted)}
 .more-help .btns{margin-top:10px}
 .hint-legend{color:var(--muted);font-size:13px}
+
+/* home tabs */
+#home{padding-bottom:calc(100px + env(safe-area-inset-bottom, 0px));gap:20px}
+.h-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.h-mini{display:flex;align-items:center;gap:8px;margin-left:auto}
+.mini-prof{display:flex;align-items:center;gap:8px;border:2px solid var(--rule);background:var(--paper);border-radius:16px;padding:4px 10px 4px 4px;box-shadow:0 3px 0 var(--shadow);cursor:pointer;text-align:left}
+.mini-prof:active{transform:translateY(2px);box-shadow:0 1px 0 var(--shadow)}
+.mp-t{display:grid;line-height:1.1}
+.mp-t b{font:800 15px/1.1 var(--f-display);max-width:12ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-t small{font-size:12px;color:var(--muted)}
+.avatar.sm{width:36px;height:36px;font-size:17px;box-shadow:0 2px 0 #3E4FC7}
+.avatar.sm[data-frame="gold"]{box-shadow:0 0 0 2px #E8B923,0 0 0 3px #9C7A12}
+.avatar.sm[data-frame="laurel"]{box-shadow:0 0 0 2px #3E8E4E}
+.avatar.sm[data-frame="star"]{outline-width:2px;outline-offset:2px}
+.avatar.sm[data-frame="rainbow"]::before{inset:-3px}
+.tab{animation:tabin .2s ease-out}
+@keyframes tabin{from{opacity:0;transform:translateY(6px)}}
+.fold{background:var(--paper);border:2px solid var(--rule);border-radius:20px;box-shadow:0 4px 0 var(--shadow);overflow:hidden}
+.fold summary{list-style:none;cursor:pointer;padding:14px 16px;font:800 18px/1.2 var(--f-display);display:flex;align-items:center;justify-content:space-between}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary::after{content:"▾";font-size:22px;line-height:1;color:var(--muted);transition:transform .2s}
+.fold[open] summary::after{transform:rotate(180deg)}
+.fold-body{display:grid;gap:10px;padding:0 12px 14px}
+.fold-body .set-row,.fold-body .how{box-shadow:none}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:15;display:flex;justify-content:center;gap:4px;background:var(--paper);border-top:2px solid var(--rule);padding:8px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px))}
+.tabbar button{flex:1 1 0;max-width:150px;position:relative;display:grid;justify-items:center;gap:2px;border:0;background:transparent;border-radius:14px;padding:6px 4px;cursor:pointer;color:var(--muted);font:800 13px/1 var(--f-display)}
+.tabbar button svg.ic{width:26px;height:26px;stroke-width:2.2}
+.tabbar button[aria-current="page"]{background:var(--pencil-soft);color:var(--ink)}
+.tabbar button[aria-current="page"] svg.ic{color:var(--pencil-deep)}
+.tabbar .dot{position:absolute;top:4px;left:calc(50% + 10px);width:10px;height:10px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--paper)}
+@media (prefers-reduced-motion:reduce){.tab{animation:none}}
 </style>
 
 <div class="toast" id="toast" role="status" hidden></div>
 
 <!-- ============ HOME ============ -->
 <div class="screen home" id="home">
-  <header class="h-top">
-    <div class="brand">
-      <h1 class="title" id="title" aria-label="Rejtvényfüzet"></h1>
-      <p>Magyar keresztrejtvények tíz témában, kalandtérképpel, napi rejtvénnyel és párbajjal.</p>
+  <header class="h-bar">
+    <h1 class="title" id="title" aria-label="Rejtvényfüzet"></h1>
+    <div class="h-mini">
+      <button type="button" class="mini-prof" id="mini-prof" aria-label="Profil"><span class="avatar sm" id="avatar-sm" aria-hidden="true"></span><span class="mp-t"><b id="mini-name"></b><small id="mini-rank"></small></span></button>
+      <span class="coin" title="Ceruzák"><span class="pc-slot"></span><span class="coin-n">0</span></span>
     </div>
+  </header>
+
+  <button type="button" class="cont hued" id="continue" hidden></button>
+
+  <section class="tab block" data-tab="today">
+    <h2>Mai teendők</h2>
+    <div class="today">
+      <div class="special daily hued" id="daily-card" style="--h:45"></div>
+      <div class="special" id="chal-card"></div>
+      <button type="button" class="special hued" id="wheel-card" style="--h:12"></button>
+    </div>
+  </section>
+
+  <section class="tab block" data-tab="adv" hidden>
+    <h2>Kalandtérkép</h2>
+    <p class="sec-sub">Minden témában 15 pálya, könnyűtől a nehézig, a végén főnök-rejtvénnyel.</p>
+    <div class="topics" id="topics"></div>
+  </section>
+
+  <section class="tab block" data-tab="modes" hidden>
+    <h2>Játékmódok</h2>
+    <div class="modes">
+      <button type="button" class="mode hued" id="mode-sved" style="--h:222"></button>
+      <button type="button" class="mode hued" id="mode-trial" style="--h:340"></button>
+      <button type="button" class="mode hued" id="mode-duel" style="--h:270"></button>
+    </div>
+  </section>
+
+  <section class="tab block" data-tab="me" hidden>
+    <h2>Profil</h2>
     <div class="profile">
       <div class="p-main">
         <span class="avatar" id="avatar" aria-hidden="true"></span>
@@ -582,36 +644,9 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
         <button type="button" class="pill-btn" id="open-stats"><span class="ic-slot" data-ic="medal"></span>Eredmények</button>
       </div>
     </div>
-  </header>
-
-  <button type="button" class="cont hued" id="continue" hidden></button>
-
-  <section class="block">
-    <h2>Mai teendők</h2>
-    <div class="today">
-      <div class="special daily hued" id="daily-card" style="--h:45"></div>
-      <div class="special" id="chal-card"></div>
-      <button type="button" class="special hued" id="wheel-card" style="--h:12"></button>
-    </div>
-  </section>
-
-  <section class="block">
-    <h2>Kalandtérkép</h2>
-    <p class="sec-sub">Minden témában 15 pálya, könnyűtől a nehézig, a végén főnök-rejtvénnyel.</p>
-    <div class="topics" id="topics"></div>
-  </section>
-
-  <section class="block">
-    <h2>Játékmódok</h2>
-    <div class="modes">
-      <button type="button" class="mode hued" id="mode-sved" style="--h:222"></button>
-      <button type="button" class="mode hued" id="mode-trial" style="--h:340"></button>
-      <button type="button" class="mode hued" id="mode-duel" style="--h:270"></button>
-    </div>
-  </section>
-
-  <section class="block settings">
-    <h2>Beállítások</h2>
+    <details class="fold settings">
+      <summary>Beállítások</summary>
+      <div class="fold-body">
     <div class="set-row">
       <label for="pref-name">A neved<small>A profilodon jelenik meg.</small></label>
       <input type="text" id="pref-name" maxlength="16" autocomplete="nickname" placeholder="Rejtvényfejtő">
@@ -644,7 +679,11 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
       <span class="lbl">Telepítés a telefonra<small id="install-txt"></small></span>
       <button type="button" class="btn yellow" id="install-btn" hidden>Telepítés</button>
     </div>
-    <div class="how">
+      </div>
+    </details>
+    <details class="fold">
+      <summary>Hogyan gyűjthetsz ceruzát?</summary>
+      <div class="fold-body"><div class="how">
       <b>Hogyan gyűjthetsz ceruzát?</b>
       <ul>
         <li>Saját erőből kitöltött helyes szó: +1, kombóban (3 jó szó sorban) +2</li>
@@ -654,9 +693,17 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
         <li>Kitüntetések: +5–50</li>
       </ul>
       <span>Ceruzáért segítséget kérhetsz játék közben, vagy díszeket vehetsz a boltban. Az ellenőrzés ingyenes.</span>
-    </div>
+    </div></div>
+    </details>
   </section>
 </div>
+
+<nav class="tabbar" id="tabbar" aria-label="Kezdőlap fülei">
+  <button type="button" data-t="today"><span class="ic-slot" data-ic="daily"></span><span>Ma</span><i class="dot" hidden></i></button>
+  <button type="button" data-t="adv"><span class="ic-slot" data-ic="map"></span><span>Kaland</span></button>
+  <button type="button" data-t="modes"><span class="ic-slot" data-ic="game"></span><span>Játékok</span></button>
+  <button type="button" data-t="me"><span class="ic-slot" data-ic="user"></span><span>Profil</span></button>
+</nav>
 
 <!-- ============ MAP ============ -->
 <div class="screen hued" id="map" hidden>
@@ -2159,6 +2206,9 @@ const ICONS={
   letter:'<path d="M4 20L9.5 5h1L16 20M6.2 15h8.6"/><path d="M19 3v5M16.5 5.5h5"/>',
   wand:'<path d="M4 20L14.5 9.5"/><path d="M14.5 9.5l2-2 1 1-2 2z"/><path d="M19 3v3M17.5 4.5h3M20.5 10v2M19.5 11h2M12 3v2M11 4h2"/>',
   bulb:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+  map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  game:'<rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor"/><circle cx="17.5" cy="13.5" r="1" fill="currentColor"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
   target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>'
 };
 const icon=k=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||""}</svg>`;
@@ -2167,7 +2217,7 @@ document.querySelectorAll(".ic-slot").forEach(s=>s.outerHTML=icon(s.dataset.ic))
 const HUE={vegyes:45,tort:32,geo:198,tud:250,muv:300,ter:125,kony:14,sport:355,film:172,szolas:80,sved:222,daily:45,trial:340,duel:270};
 
 /* ---------- state ---------- */
-const prefs=Object.assign({lenient:false,theme:"system",lvl:1,big:false,sound:true,haptic:true,name:""},store.get("prefs",{}));
+const prefs=Object.assign({tab:"today",lenient:false,theme:"system",lvl:1,big:false,sound:true,haptic:true,name:""},store.get("prefs",{}));
 const savePrefs=()=>store.set("prefs",prefs);
 let stats=Object.assign({stars:0,solved:0,by:{},coins:10,earned:0,spent:0,hints:0,clean:0,hard:0,sved:0,fast:0,ach:{},bosses:0,bestCombo:0,bought:0,chalAll:0,words:0},store.get("stats",{}));
 stats.daily=Object.assign({last:null,streak:0,best:0,results:{}},stats.daily||{});
@@ -2367,6 +2417,7 @@ function setLayout(){
 function show(name){
   screen=name;
   ["home","map","shop","stats","game"].forEach(s=>$(s).hidden=s!==name);
+  $("tabbar").hidden=name!=="home";
   if(name!=="game")window.scrollTo(0,0);
 }
 
@@ -2382,6 +2433,8 @@ function renderProfile(){
   $("avatar").textContent=nm?nm[0].toLocaleUpperCase("hu"):"?";
   $("avatar").dataset.frame=stats.equip.frame;
   $("p-name").textContent=nm||"Névtelen fejtő";
+  $("avatar-sm").textContent=$("avatar").textContent;$("avatar-sm").dataset.frame=stats.equip.frame;
+  $("mini-name").textContent=nm||"Profil";$("mini-rank").textContent=`Szint ${ri+1} · ${RANKS[ri][1]}`;
   $("rank-lvl").textContent=ri+1;
   $("rank-name").textContent=RANKS[ri][1];
   if(ri+1<RANKS.length){const a=RANKS[ri][0],b=RANKS[ri+1][0];$("rank-bar").style.width=Math.round((s-a)/(b-a)*100)+"%";$("rank-next").textContent=`${s} csillag · még ${b-s} a következő szintig`;}
@@ -2404,7 +2457,9 @@ function renderHome(){
     cont.innerHTML=`<span class="c-txt"><small>Folytatás</small><b>${esc(modeLabel(saved))}</b><span>${Math.round(fill/tot*100)}% kitöltve · ${fmt(saved.ms||0)}</span></span><span class="arrow">›</span>`;
     cont.hidden=false;cont.onclick=()=>openGame(saved);
   }else cont.hidden=true;
-  renderDaily();renderChal();renderWheelCard();
+  renderDaily();renderChal();renderWheelCard();setTab(prefs.tab,true);
+  const t0=todayKey(),todo=!stats.daily.results[t0]||stats.wheel!==t0||!stats.chal.list.every(c=>c.done);
+  document.querySelector('#tabbar [data-t="today"] .dot').hidden=!todo;
   const t=$("topics");t.innerHTML="";
   TOPICS.forEach(tp=>{
     const m=mapOf(tp.id),st=m.stars.reduce((a,b)=>a+(b||0),0),b=document.createElement("button");
@@ -2453,6 +2508,15 @@ function renderWheelCard(){
 function countCells(P){const s=new Set();P.words.forEach(w=>w.letters.forEach((_,i)=>s.add((w.r+(w.dir==="d"?i:0))+","+(w.c+(w.dir==="a"?i:0)))));return s.size;}
 function countFilled(g){let n=0;g.entries.forEach(row=>row.forEach(v=>{if(v)n++;}));return n;}
 
+function setTab(t,quiet){
+  if(!document.querySelector(`#home .tab[data-tab="${t}"]`))t="today";
+  document.querySelectorAll("#home .tab").forEach(x=>x.hidden=x.dataset.tab!==t);
+  document.querySelectorAll("#tabbar button").forEach(b=>b.setAttribute("aria-current",b.dataset.t===t?"page":"false"));
+  if(prefs.tab!==t){prefs.tab=t;savePrefs();}
+  if(!quiet)window.scrollTo(0,0);
+}
+document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=()=>{setTab(b.dataset.t);haptic(8);});
+$("mini-prof").onclick=()=>setTab("me");
 /* ---------- wheel ---------- */
 const WHEEL=[5,10,5,20,10,50,15,25];
 function wheelSheet(){
