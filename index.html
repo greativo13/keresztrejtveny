@@ -585,6 +585,13 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
 .tabbar button[aria-current="page"] svg.ic{color:var(--pencil-deep)}
 .tabbar .dot{position:absolute;top:4px;left:calc(50% + 10px);width:10px;height:10px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--paper)}
 @media (prefers-reduced-motion:reduce){.tab{animation:none}}
+
+/* solved words lock in green; wrong full words flash before clearing */
+.cell.lock:not(.cur){background:var(--good-soft);border-color:var(--good)}
+.cell.lock:not(.cur) .ch{color:var(--good);text-shadow:none}
+.cell.wrongflash{animation:wrongflash .48s ease-out}
+@keyframes wrongflash{0%,100%{transform:none}15%,55%{transform:translateX(-4px);background:var(--bad-soft);border-color:var(--bad)}35%,75%{transform:translateX(4px);background:var(--bad-soft);border-color:var(--bad)}}
+.cell.wrongflash .ch{color:var(--bad)}
 </style>
 
 <div class="toast" id="toast" role="status" hidden></div>
@@ -660,10 +667,6 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
       <span class="switch"><input type="checkbox" id="pref-haptic"><span></span></span>
     </div>
     <div class="set-row">
-      <label for="pref-lenient">Ékezet nélkül is elfogadja<small>Például O is jó az Ő helyén.</small></label>
-      <span class="switch"><input type="checkbox" id="pref-lenient"><span></span></span>
-    </div>
-    <div class="set-row">
       <label for="pref-big">Nagyobb betűk<small>Nagyobb meghatározások, gombok és billentyűk.</small></label>
       <span class="switch"><input type="checkbox" id="pref-big"><span></span></span>
     </div>
@@ -686,6 +689,7 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
       <div class="fold-body"><div class="how">
       <b>Hogyan gyűjthetsz ceruzát?</b>
       <ul>
+        <li>Ha ékezet nélkül írod be a jó szót, a játék kiteszi az ékezeteket.</li>
         <li>Saját erőből kitöltött helyes szó: +1, kombóban (3 jó szó sorban) +2</li>
         <li>Megfejtés: Könnyű +5, Közepes +8, Nehéz +12, csillagonként még +2</li>
         <li>Új pálya a kalandtérképen: +5, főnök: +40</li>
@@ -2471,7 +2475,7 @@ function renderHome(){
   $("mode-sved").innerHTML=`<b>${icon("sved")}Svéd rejtvény</b><span>A rövid meghatározások a rácsban vannak, nyíllal.</span>`;
   $("mode-trial").innerHTML=`<b>${icon("trial")}Időfutam</b><span>3 perc, minél több szó. Kész rácsonként +20 mp. Rekordod: ${stats.trial.best} szó.</span>`;
   $("mode-duel").innerHTML=`<b>${icon("duel")}Párbaj</b><span>Fejts meg egy rácsot, és küldd el a linket egy barátodnak: ugyanazt kapja.${stats.duel.wins?" "+stats.duel.wins+" győzelem.":""}</span>`;
-  $("pref-lenient").checked=prefs.lenient;$("pref-big").checked=prefs.big;$("pref-sound").checked=prefs.sound;$("pref-haptic").checked=prefs.haptic;
+  $("pref-big").checked=prefs.big;$("pref-sound").checked=prefs.sound;$("pref-haptic").checked=prefs.haptic;
   if(document.activeElement!==$("pref-name"))$("pref-name").value=prefs.name||"";
   document.querySelectorAll("#theme-seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===prefs.theme));
   renderInstall();
@@ -2703,7 +2707,7 @@ function newGame(spec){
 const isSved=()=>G&&G.mode==="sved";
 const isTrial=()=>G&&G.mode==="trial";
 function openGame(g){
-  G=g;G.info=G.info||{};G.rewarded=G.rewarded||{};G.wordCoins=G.wordCoins||0;G.combo=G.combo||0;
+  G=g;G.info=G.info||{};G.lock=G.lock||{};G.rewarded=G.rewarded||{};G.wordCoins=G.wordCoins||0;G.combo=G.combo||0;
   G.sol=Array.from({length:G.P.h},()=>Array(G.P.w).fill(null));
   G.P.words.forEach(w=>w.letters.forEach((ch,i)=>{G.sol[w.r+(w.dir==="d"?i:0)][w.c+(w.dir==="a"?i:0)]=ch;}));
   const game=$("game");
@@ -2714,7 +2718,7 @@ function openGame(g){
   $("g-topic").textContent=G.mode==="map"||G.mode==="normal"?topicName(G.topic):topicName(G.mode);
   game.classList.toggle("done",!!G.done);
   clearTimeout(resT);levelLine();
-  renderGrid();renderClues();
+  cur=null;renderGrid();renderClues();settleWords();
   const first=G.P.words[0];select(first.r,first.c,first.dir);
   setLayout();updateProgress();tickClock();updateCoins();updateCombo();
   ["a-letter","a-word"].forEach(id=>$(id).disabled=isTrial());
@@ -2798,7 +2802,27 @@ function sizeGrid(){
 const wordAt=(r,c,dir)=>G.P.words.find(w=>w.dir===dir&&(dir==="a"?(w.r===r&&c>=w.c&&c<w.c+w.letters.length):(w.c===c&&r>=w.r&&r<w.r+w.letters.length)));
 const cellsOf=w=>w.letters.map((_,i)=>[w.r+(w.dir==="d"?i:0),w.c+(w.dir==="a"?i:0)]);
 const allCells=()=>{const o=[];for(let r=0;r<G.P.h;r++)for(let c=0;c<G.P.w;c++)if(G.sol[r][c])o.push([r,c]);return o;};
-function select(r,c,dir){if(!wordAt(r,c,dir))dir=dir==="a"?"d":"a";cur={r,c,dir};highlight();}
+function select(r,c,dir){
+  if(!wordAt(r,c,dir))dir=dir==="a"?"d":"a";
+  const prev=cur&&G&&!G.done?wordAt(cur.r,cur.c,cur.dir):null;
+  cur={r,c,dir};
+  const now=wordAt(r,c,dir);
+  if(prev&&prev!==now)leaveWord(prev);
+  highlight();
+}
+// a word that is completely filled in but wrong gets cleared when you move away from it
+function leaveWord(w){
+  const cs=cellsOf(w);
+  if(!cs.every(([r,c])=>G.entries[r][c])||cs.every(([r,c])=>matches(r,c)))return;
+  const del=cs.filter(([r,c])=>!fixed(r,c));
+  if(!del.length)return;
+  sfx.bad();haptic([30,30,30]);breakCombo();
+  const was=del.map(([r,c])=>G.entries[r][c]),g0=G;
+  const done=()=>{if(G!==g0||G.done)return;del.forEach(([r,c],i)=>{cellEls[r][c].classList.remove("wrongflash");if(!fixed(r,c)&&G.entries[r][c]===was[i])setCell(r,c,"");});updateProgress();markFull();updatePrices();saveGame();};
+  if(REDUCED){done();return;}
+  del.forEach(([r,c])=>{const el=cellEls[r][c];el.classList.remove("wrongflash");void el.offsetWidth;el.classList.add("wrongflash");});
+  setTimeout(done,480);
+}
 function toggleDir(){const nd=cur.dir==="a"?"d":"a";if(wordAt(cur.r,cur.c,nd)){cur.dir=nd;highlight();}}
 function highlight(){
   document.querySelectorAll(".cell.inword,.cell.cur").forEach(e=>e.classList.remove("inword","cur"));
@@ -2850,26 +2874,46 @@ function nextWord(back,preferEmpty){
 function typeLetter(ch){
   if(!G||G.done)return;
   sfx.key();
-  const k=cur.r+","+cur.c;
-  if(!G.rev[k])setCell(cur.r,cur.c,ch,true);
+  if(fixed(cur.r,cur.c)){
+    // typing the letter that is already fixed just steps over it; anything else goes to the next free cell
+    if(fold(ch)!==fold(G.sol[cur.r][cur.c])){
+      let guard=0;while(fixed(cur.r,cur.c)&&guard++<20&&moveInWord(false));
+      if(!fixed(cur.r,cur.c))setCell(cur.r,cur.c,ch,true);
+    }
+  }else setCell(cur.r,cur.c,ch,true);
   if(!moveInWord(false)){
     const w=wordAt(cur.r,cur.c,cur.dir);
     if(!w||cellsOf(w).every(([r,c])=>G.entries[r][c]))nextWord(false,true);
-  }else{let guard=0;while(G.rev[cur.r+","+cur.c]&&guard++<20&&moveInWord(false));}
+  }
   afterChange();
 }
 function backspace(){
   if(!G||G.done)return;
   sfx.del();
   const k=cur.r+","+cur.c;
-  if(G.entries[cur.r][cur.c]&&!G.rev[k])setCell(cur.r,cur.c,"");
-  else if(moveInWord(true)){if(!G.rev[cur.r+","+cur.c])setCell(cur.r,cur.c,"");}
+  if(G.entries[cur.r][cur.c]&&!fixed(cur.r,cur.c))setCell(cur.r,cur.c,"");
+  else if(moveInWord(true)){if(!fixed(cur.r,cur.c))setCell(cur.r,cur.c,"");}
   afterChange();
 }
 function step(dr,dc){let r=cur.r+dr,c=cur.c+dc;while(r>=0&&r<G.P.h&&c>=0&&c<G.P.w){if(G.sol[r][c]){select(r,c,cur.dir);return;}r+=dr;c+=dc;}}
-const matches=(r,c)=>{const v=G.entries[r][c],s=G.sol[r][c];return !!v&&(v===s||(prefs.lenient&&fold(v)===fold(s)));};
+const matches=(r,c)=>{const v=G.entries[r][c],s=G.sol[r][c];return !!v&&(v===s||fold(v)===fold(s));};
+// a cell that may not be changed any more: revealed, or part of a solved word
+const fixed=(r,c)=>!!(G.rev[r+","+c]||G.lock[r+","+c]);
+// a word that is right apart from accents gets its accents, then locks
+function settleWords(){
+  let n=0;
+  G.P.words.forEach(w=>{
+    const cs=cellsOf(w);
+    if(!cs.every(([r,c])=>matches(r,c)))return;
+    cs.forEach(([r,c])=>{
+      if(G.entries[r][c]!==G.sol[r][c])setCell(r,c,G.sol[r][c],true);
+      const k=r+","+c;if(!G.lock[k]){G.lock[k]=1;n++;}
+    });
+  });
+  if(n)paintMarks();
+}
 function afterChange(){
-  updateProgress();markFull();rewardWords();updatePrices();
+  settleWords();updateProgress();markFull();rewardWords();updatePrices();
   if(!G.done&&allCells().every(([r,c])=>matches(r,c))){finish(false);return;}
   saveGame();
 }
@@ -2908,7 +2952,7 @@ function updateCombo(pop){
 function breakCombo(){if(G.combo>=2)toast("A kombó megszakadt.",1600);G.combo=0;updateCombo();}
 function updateProgress(){const cs=allCells();$("g-prog").style.width=Math.round(cs.filter(([r,c])=>G.entries[r][c]).length/cs.length*100)+"%";}
 function markFull(){G.P.words.forEach(w=>w._li&&w._li.classList.toggle("full",cellsOf(w).every(([r,c])=>G.entries[r][c])));}
-function paintMarks(){allCells().forEach(([r,c])=>{const k=r+","+c,cl=cellEls[r][c].classList,m=G.marks[k];cl.toggle("ok",m==="ok");cl.toggle("bad",m==="bad");cl.toggle("rev",!!G.rev[k]);});}
+function paintMarks(){allCells().forEach(([r,c])=>{const k=r+","+c,cl=cellEls[r][c].classList,m=G.marks[k];cl.toggle("ok",m==="ok");cl.toggle("bad",m==="bad");cl.toggle("rev",!!G.rev[k]);cl.toggle("lock",!!G.lock[k]);});}
 function check(){
   if(G.done)return;
   let ok=0,bad=0,em=0;
@@ -3077,7 +3121,7 @@ function trialNext(){
   sfx.win();haptic([20,30,20]);confetti(HUE.trial);
   toast(`Kész rács! +${TRIAL_BONUS_MS/1000} mp`,1800);
   const P=buildPuzzle({mode:"trial"});
-  Object.assign(G,{P,entries:Array.from({length:P.h},()=>Array(P.w).fill("")),rev:{},marks:{},rewarded:{}});
+  Object.assign(G,{P,entries:Array.from({length:P.h},()=>Array(P.w).fill("")),rev:{},marks:{},rewarded:{},lock:{},info:{}});cur=null;
   G.sol=Array.from({length:P.h},()=>Array(P.w).fill(null));
   P.words.forEach(w=>w.letters.forEach((ch,i)=>{G.sol[w.r+(w.dir==="d"?i:0)][w.c+(w.dir==="a"?i:0)]=ch;}));
   renderGrid();renderClues();const f=P.words[0];select(f.r,f.c,f.dir);updateProgress();sizeGrid();levelLine();
@@ -3131,7 +3175,6 @@ function confirmSheet(title,text,yes,fn){
 function menuSheet(){
   const daily=G.mode==="daily",t=isTrial();
   openSheet("menu",`<h2>${esc($("g-topic").textContent)}</h2>
-  <div class="menu-row"><label for="m-len">Ékezet nélkül is elfogadja</label><span class="switch"><input type="checkbox" id="m-len" ${prefs.lenient?"checked":""}><span></span></span></div>
   <div class="menu-row"><label for="m-snd">Hangok</label><span class="switch"><input type="checkbox" id="m-snd" ${prefs.sound?"checked":""}><span></span></span></div>
   <div class="btns">
     ${daily||t||G.mode==="duel"?"":`<button type="button" class="btn" id="m-new">Új rejtvény ugyanitt</button>`}
@@ -3139,7 +3182,6 @@ function menuSheet(){
     <button type="button" class="btn" id="m-home">${G.mode==="map"?"Vissza a térképre":"Vissza a menübe"}</button>
     <button type="button" class="btn primary" id="m-close">Folytatom</button>
   </div>`);
-  $("m-len").onchange=e=>{prefs.lenient=e.target.checked;savePrefs();if(!G.done)afterChange();};
   $("m-snd").onchange=e=>{prefs.sound=e.target.checked;savePrefs();};
   const nb=$("m-new");if(nb)nb.onclick=()=>{const spec={mode:G.mode,topic:G.topic,lvl:G.lvl,mapIdx:G.mapIdx};if(!G.done&&countFilled(G)>0)confirmSheet("Új rejtvényt kezdesz?","A mostani állás elvész.","Új rejtvény",()=>newGame(spec));else{closeSheet();newGame(spec);}};
   const sv=$("m-solve");if(sv)sv.onclick=()=>confirmSheet("Megnézed a megoldást?",daily?"A napi sorozatod megszakad, és nem jár érte csillag vagy ceruza.":"Ezért a rejtvényért nem jár csillag vagy ceruza.","Megoldás",()=>{allCells().forEach(([r,c])=>{if(!matches(r,c)){setCell(r,c,G.sol[r][c]);G.rev[r+","+c]=true;}});finish(true);});
@@ -3266,7 +3308,6 @@ $("wheel-card").onclick=wheelSheet;
 $("mode-sved").onclick=svedSheet;
 $("mode-trial").onclick=()=>startGame({mode:"trial",topic:"trial",lvl:2});
 $("mode-duel").onclick=duelSheet;
-$("pref-lenient").onchange=e=>{prefs.lenient=e.target.checked;savePrefs();};
 $("pref-big").onchange=e=>{prefs.big=e.target.checked;savePrefs();document.body.classList.toggle("big",prefs.big);};
 $("pref-sound").onchange=e=>{prefs.sound=e.target.checked;savePrefs();if(prefs.sound)sfx.word();};
 $("pref-haptic").onchange=e=>{prefs.haptic=e.target.checked;savePrefs();haptic(30);};

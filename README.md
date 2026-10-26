@@ -22,6 +22,7 @@ Magyar nyelvű keresztrejtvény-játék a böngészőben, telefonra optimalizál
 - **Csillagok és szintek:** 1–3 csillag megfejtésenként, szintlépés Kezdőtől Legendáig
 - **13 kitüntetés** és Eredmények oldal (legjobb idők, sorozat, ceruzamérleg)
 - **Eredmény megosztása** egy gombnyomással
+- A kitalált szó zölden rögzül; ékezet nélkül beírva a játék kiteszi az ékezeteket; a kitöltött, de rossz szó továbblépéskor törlődik
 - Beépített magyar billentyűzet telefonon, fekvő nézet, nagyobb betűk opció, világos/sötét megjelenés
 - **Telepíthető** a telefon kezdőképernyőjére, internet nélkül is működik
 
