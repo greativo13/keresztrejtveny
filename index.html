@@ -2426,7 +2426,7 @@ function renderDaily(){
   const streak=curStreak(),card=$("daily-card");
   let body,btns="";
   if(res&&!res.gaveUp){
-    body=`<span class="sp-meta">${starsHtml(res.stars)}<span>${fmt(res.ms)} · ${res.hints?res.hints+" felfedett betű":"segítség nélkül"}</span></span><span class="sp-sub">Holnap új napi rejtvény vár.</span>`;
+    body=`<span class="sp-meta">${starsHtml(res.stars)}<span>${fmt(res.ms)} · ${res.hints?res.hints+" segítség":"segítség nélkül"}</span></span><span class="sp-sub">Holnap új napi rejtvény vár.</span>`;
     btns=`<button type="button" class="btn yellow" id="d-share">Eredmény megosztása</button>`;
   }else if(res&&res.gaveUp){
     body=`<span class="sp-sub">A mai napit feladtad. Holnap új napi rejtvény vár.</span>`;
@@ -2437,7 +2437,7 @@ function renderDaily(){
   }
   card.innerHTML=`<div class="sp-top"><h3>${icon("daily")}Napi rejtvény</h3><span class="tag ${res&&!res.gaveUp?"ok":""}">${res&&!res.gaveUp?"Kész":streak?streak+" napos sorozat":"Ma"}</span></div><span class="sp-sub">${fmtDate(t)}</span>${body}${btns?`<div class="sp-btns">${btns}</div>`:""}`;
   const p=$("d-play");if(p)p.onclick=()=>startGame({mode:"daily",topic:"vegyes",lvl:2});
-  const sh=$("d-share");if(sh)sh.onclick=()=>shareResult(`Rejtvényfüzet – Napi rejtvény, ${fmtDate(t,true)}\n${"★".repeat(res.stars)}${"☆".repeat(3-res.stars)} · ${fmt(res.ms)} · ${res.hints?res.hints+" felfedett betű":"segítség nélkül"}\n${res.sq||""}\n${PUBLIC_URL}`);
+  const sh=$("d-share");if(sh)sh.onclick=()=>shareResult(`Rejtvényfüzet – Napi rejtvény, ${fmtDate(t,true)}\n${"★".repeat(res.stars)}${"☆".repeat(3-res.stars)} · ${fmt(res.ms)} · ${res.hints?res.hints+" segítség":"segítség nélkül"}\n${res.sq||""}\n${PUBLIC_URL}`);
 }
 function renderChal(){
   ensureChal();
@@ -2997,7 +2997,7 @@ function finish(gaveUp){
 function squares(){return G.P.words.map(w=>cellsOf(w).some(([r,c])=>G.rev[r+","+c])?"🟨":"🟩").join("");}
 function shareText(stars){
   const title=G.mode==="daily"?`Napi rejtvény, ${fmtDate(G.date,true)}`:modeLabel(G);
-  return `Rejtvényfüzet – ${title}\n${"★".repeat(stars)}${"☆".repeat(3-stars)} · ${fmt(G.ms)} · ${G.hints?G.hints+" felfedett betű":"segítség nélkül"}\n${squares()}\n${PUBLIC_URL}`;
+  return `Rejtvényfüzet – ${title}\n${"★".repeat(stars)}${"☆".repeat(3-stars)} · ${fmt(G.ms)} · ${G.hints?G.hints+" segítség":"segítség nélkül"}\n${squares()}\n${PUBLIC_URL}`;
 }
 function duelLink(){return `${PUBLIC_URL}#p-${G.duel.seed.toString(36)}-${Math.max(1,Math.round(G.ms/1000)).toString(36)}`;}
 async function shareResult(text){
@@ -3100,7 +3100,7 @@ function winSheet(stars,gaveUp,newRank,rewards,total,mapInfo,duelInfo){
     head=`<div class="win-stars" aria-label="${stars} csillag">${[0,1,2].map(i=>`<span class="${i<stars?"on":""}">★</span>`).join("")}</div>
       <h2>${title}</h2>
       ${duelInfo?`<div class="duel-res"><div class="${duelInfo.win?"win":""}"><span>Te</span><b>${fmt(G.ms)}</b></div><div class="${duelInfo.win?"":"win"}"><span>Kihívó</span><b>${fmt(duelInfo.rival)}</b></div></div>`:""}
-      <p>${fmt(G.ms)} alatt, ${G.hints?G.hints+" felfedett betűvel":"segítség nélkül"}.${stars<3?" Három csillag segítség nélkül jár.":""}${daily?` Napi sorozat: ${stats.daily.streak} nap.`:""}${mapInfo&&mapInfo.unlocked?` Megnyílt a ${mapInfo.unlocked}. pálya.`:""}</p>
+      <p>${fmt(G.ms)} alatt, ${G.hints?G.hints+" segítséggel":"segítség nélkül"}.${stars<3?" Három csillag segítség nélkül jár.":""}${daily?` Napi sorozat: ${stats.daily.streak} nap.`:""}${mapInfo&&mapInfo.unlocked?` Megnyílt a ${mapInfo.unlocked}. pálya.`:""}</p>
       <div class="panel">${G.wordCoins?`<div class="rw-row muted"><span>Helyes szavak (már jóváírva)</span><b>+${G.wordCoins} ${PENCIL}</b></div>`:""}${rows}<div class="rw-row total"><span>Most kapsz</span><b>+${total} ${PENCIL}</b></div></div>
       <p class="win-rank">${newRank!==null?`Szintet léptél! Szint ${newRank+1} · ${RANKS[newRank][1]}`:`Összesen ${stats.stars} csillag · ${stats.coins} ceruza`}</p>`;
   }
