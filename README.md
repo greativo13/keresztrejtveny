@@ -11,6 +11,7 @@ Magyar nyelvű keresztrejtvény-játék a böngészőben, telefonra optimalizál
 - **Bolt:** rácsminták, betűtípusok, profilkeretek ceruzáért; a Súgóban fizetős információ a szóról (betűminta, első és utolsó betű, összekevert betűk)
 - **Napi kihívások** és **szerencsekerék**
 - **Időfutam:** 3 perc, minél több szó
+- **Szudoku:** 3 nehézség, egyértelmű megoldás, jegyzet mód, ütközésjelzés, ellenőrzés és súgó
 - **Párbaj:** linkkel küldhető kihívás, a barát ugyanazt a rácsot kapja
 
 - **10 téma:** Vegyes, Történelem, Földrajz, Tudomány, Irodalom és művészet, Természet, Konyha és otthon, Sport, Film és zene, Szólások

@@ -592,6 +592,53 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
 .cell.wrongflash{animation:wrongflash .48s ease-out}
 @keyframes wrongflash{0%,100%{transform:none}15%,55%{transform:translateX(-4px);background:var(--bad-soft);border-color:var(--bad)}35%,75%{transform:translateX(4px);background:var(--bad-soft);border-color:var(--bad)}}
 .cell.wrongflash .ch{color:var(--bad)}
+
+/* sudoku */
+.s-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.s-wrap{flex:1;min-height:0;display:grid;place-items:center;padding:8px}
+.s-side{flex:none;display:flex;flex-direction:column}
+.s-board{--sb:320px;width:var(--sb);height:var(--sb);display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);background:var(--cellbg,var(--paper));border:3px solid var(--ink);border-radius:16px;overflow:hidden;box-shadow:0 5px 0 var(--tileshade)}
+.sc{position:relative;display:grid;place-items:center;border-right:1px solid var(--cellline,var(--line));border-bottom:1px solid var(--cellline,var(--line));cursor:pointer;font:700 calc(var(--sb) / 9 * .58 * var(--fscale,1))/1 var(--cellfont,var(--f-display));color:var(--hl-deep);transition:background .12s}
+.sc:nth-child(9n){border-right:0}
+.sc:nth-child(n+73){border-bottom:0}
+.sc.br{border-right:3px solid var(--ink)}
+.sc.bb{border-bottom:3px solid var(--ink)}
+.sc.given{color:var(--cellink,var(--ink));font-weight:800}
+.sc.peer{background:color-mix(in srgb,var(--hl-soft) 55%,var(--cellbg,var(--paper)))}
+.sc.same{background:var(--hl-soft)}
+.sc.same .sv{color:var(--hl-soft-ink)}
+.sc.sel{background:var(--hl)}
+.sc.sel .sv{color:var(--hl-ink)}
+.sc.conf .sv,.sc.wrong .sv{color:var(--bad)}
+.sc.conf,.sc.wrong{background:var(--bad-soft)}
+.sc.sel.conf,.sc.sel.wrong{background:var(--hl)}
+.sc.rev::after{content:"";position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 9px 9px;border-color:transparent transparent var(--muted) transparent}
+.sc .sn{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);pointer-events:none}
+.sc .sn i{font:700 calc(var(--sb) / 9 * .25)/1 var(--f-body);font-style:normal;color:var(--muted);display:grid;place-items:center}
+.sc.sel .sn i{color:var(--hl-ink)}
+.sc.won{animation:won .55s ease-out backwards}
+.sc.wave{animation:wave .7s ease-out backwards}
+.sc.shake{animation:shake .4s}
+.s-pad{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;padding:10px max(8px, env(safe-area-inset-right, 0px)) 12px max(8px, env(safe-area-inset-left, 0px));background:var(--chip);border-radius:22px 22px 0 0}
+.s-pad button{height:60px;border:0;border-radius:12px;background:var(--key);box-shadow:0 3px 0 var(--key-2);font:800 27px/1 var(--f-display);color:var(--hl-deep);display:grid;justify-items:center;align-content:center;gap:2px;cursor:pointer;touch-action:manipulation;padding:0}
+.s-pad button small{font:800 11px/1 var(--f-body);color:var(--muted);min-height:11px}
+.s-pad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--key-2)}
+.s-pad button.full{opacity:.3}
+.s-pad.notes button{color:var(--muted);font-size:21px;background:var(--hl-soft)}
+#s-notes.on{background:var(--hl-soft);border-color:var(--hl)}
+#s-notes.on .pu-p{background:var(--good);color:#fff;box-shadow:0 2px 0 var(--good-deep)}
+body[data-layout="desk"] .s-body{flex-direction:row;align-items:center;justify-content:center;gap:16px;padding:10px}
+body[data-layout="desk"] .s-side{width:380px}
+body[data-layout="desk"] .s-pad{grid-template-columns:repeat(3,1fr);border-radius:22px;gap:10px}
+body[data-layout="desk"] .s-pad button{height:72px}
+@media (orientation:landscape) and (max-height:520px){
+  body[data-layout="mobile"] .s-body{flex-direction:row}
+  body[data-layout="mobile"] .s-side{width:52%;justify-content:flex-end}
+  body[data-layout="mobile"] .s-pad{grid-template-columns:repeat(5,1fr);border-radius:16px 0 0 0}
+  body[data-layout="mobile"] .s-pad button{height:44px;font-size:22px}
+}
+@media (max-width:390px){.s-pad{gap:4px}.s-pad button{height:54px;font-size:24px}}
+@media (prefers-reduced-motion:reduce){.sc.won,.sc.wave,.sc.shake{animation:none}}
 </style>
 
 <div class="toast" id="toast" role="status" hidden></div>
@@ -629,6 +676,7 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
       <button type="button" class="mode hued" id="mode-sved" style="--h:222"></button>
       <button type="button" class="mode hued" id="mode-trial" style="--h:340"></button>
       <button type="button" class="mode hued" id="mode-duel" style="--h:270"></button>
+      <button type="button" class="mode hued" id="mode-sudoku" style="--h:205"></button>
     </div>
   </section>
 
@@ -778,6 +826,30 @@ body{background-image:radial-gradient(var(--ruled) 1.4px,transparent 1.6px);back
       <section><h2>Vízszintes</h2><ol class="clue-list" id="list-a"></ol></section>
       <section><h2>Függőleges</h2><ol class="clue-list" id="list-d"></ol></section>
     </aside>
+  </div>
+</div>
+
+<!-- ============ SUDOKU ============ -->
+<div class="game hued sdk" id="sudoku" hidden style="--h:205">
+  <div class="g-top">
+    <button type="button" class="icon-btn" id="s-back" aria-label="Vissza"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="g-title"><b>Szudoku</b><span id="s-sub"></span></div>
+    <span class="coin" id="s-coins" title="Ceruzák"><span class="pc-slot"></span><span class="coin-n">0</span></span>
+    <div class="g-clock" id="s-clock">0:00</div>
+    <button type="button" class="icon-btn" id="s-more" aria-label="További lehetőségek"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+  </div>
+  <div class="g-progress"><i id="s-prog"></i></div>
+  <div class="s-body">
+    <div class="s-wrap" id="s-wrap"><div class="s-board" id="s-board" role="grid" aria-label="Szudoku tábla"></div></div>
+    <div class="s-side">
+      <div class="g-actions s-tools">
+        <button type="button" class="pu" id="s-erase" aria-label="Radír"><span class="ic-slot" data-ic="eraser"></span><span class="pu-l">Radír</span></button>
+        <button type="button" class="pu" id="s-notes" aria-label="Jegyzet mód"><span class="ic-slot" data-ic="note"></span><span class="pu-l">Jegyzet</span><span class="pu-p">KI</span></button>
+        <button type="button" class="pu" id="s-hint" aria-label="Egy kocka felfedése"><span class="ic-slot" data-ic="bulb"></span><span class="pu-l">Súgó</span><span class="pu-p"></span></button>
+        <button type="button" class="check" id="s-check">Ellenőrzés</button>
+      </div>
+      <div class="s-pad" id="s-pad"></div>
+    </div>
   </div>
 </div>
 
@@ -2213,6 +2285,9 @@ const ICONS={
   map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
   game:'<rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor"/><circle cx="17.5" cy="13.5" r="1" fill="currentColor"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  eraser:'<path d="M20 20H9l-5-5a2 2 0 0 1 0-3l8-8a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8"/><path d="M8 11l6 6"/>',
+  note:'<path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  sudoku:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
   target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>'
 };
 const icon=k=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||""}</svg>`;
@@ -2280,6 +2355,7 @@ const ACH=[
   {id:"duel",name:"Párbajhős",desc:"Nyerj meg egy párbajt.",reward:15,test:s=>s.duel.wins>=1},
   {id:"sved5",name:"Svéd mester",desc:"Fejts meg 5 svéd rejtvényt.",reward:15,test:s=>s.sved>=5},
   {id:"shop",name:"Divatos",desc:"Vásárolj valamit a boltban.",reward:5,test:s=>s.bought>=1},
+  {id:"sudoku5",name:"Számzseni",desc:"Fejts meg 5 szudokut.",reward:15,test:s=>(s.sudoku||0)>=5},
   {id:"rich",name:"Takarékos",desc:"Gyűjts össze egyszerre 100 ceruzát.",reward:10,test:s=>s.coins>=100}
 ];
 
@@ -2420,9 +2496,9 @@ function setLayout(){
 }
 function show(name){
   screen=name;
-  ["home","map","shop","stats","game"].forEach(s=>$(s).hidden=s!==name);
+  ["home","map","shop","stats","game","sudoku"].forEach(s=>$(s).hidden=s!==name);
   $("tabbar").hidden=name!=="home";
-  if(name!=="game")window.scrollTo(0,0);
+  if(name!=="game"&&name!=="sudoku")window.scrollTo(0,0);
 }
 
 /* ---------- home ---------- */
@@ -2475,6 +2551,7 @@ function renderHome(){
   $("mode-sved").innerHTML=`<b>${icon("sved")}Svéd rejtvény</b><span>A rövid meghatározások a rácsban vannak, nyíllal.</span>`;
   $("mode-trial").innerHTML=`<b>${icon("trial")}Időfutam</b><span>3 perc, minél több szó. Kész rácsonként +20 mp. Rekordod: ${stats.trial.best} szó.</span>`;
   $("mode-duel").innerHTML=`<b>${icon("duel")}Párbaj</b><span>Fejts meg egy rácsot, és küldd el a linket egy barátodnak: ugyanazt kapja.${stats.duel.wins?" "+stats.duel.wins+" győzelem.":""}</span>`;
+  {const sv=store.get("sudoku",null);$("mode-sudoku").innerHTML=`<b>${icon("sudoku")}Szudoku</b><span>${sv&&!sv.done&&sv.sol?`Félbehagyott ${LEVELS[sv.lvl].name.toLowerCase()} szudoku vár · ${fmt(sv.ms)}`:"Klasszikus 9×9-es számrejtvény, jegyzetekkel. Három nehézség."}</span>`;}
   $("pref-big").checked=prefs.big;$("pref-sound").checked=prefs.sound;$("pref-haptic").checked=prefs.haptic;
   if(document.activeElement!==$("pref-name"))$("pref-name").value=prefs.name||"";
   document.querySelectorAll("#theme-seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===prefs.theme));
@@ -2649,7 +2726,7 @@ function renderStats(){
     ["Párbaj",stats.duel.wins,`győzelem ${stats.duel.played} párbajból`],
     ["Kaland",Object.values(stats.map).reduce((a,m)=>a+m.done,0),`pálya a ${TOPICS.length*MAP_LEN}-ből`]
   ].map(([a,b,c])=>`<div class="tile"><small>${a}</small><b>${b}</b><span>${c}</span></div>`).join("");
-  const rows=TOPICS.map(t=>({id:t.id,name:t.name})).concat([{id:"sved",name:"Svéd rejtvény"}]);
+  const rows=TOPICS.map(t=>({id:t.id,name:t.name})).concat([{id:"sved",name:"Svéd rejtvény"},{id:"sudoku",name:"Szudoku"}]);
   $("best-table").innerHTML=`<thead><tr><th>Téma</th>${[1,2,3].map(l=>`<th>${LEVELS[l].name}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td>${[1,2,3].map(l=>{const st=stats.by[r.id+"|"+l];return st&&st.bestMs?`<td>${fmt(st.bestMs)} ${starsHtml(st.best)}</td>`:`<td class="none">–</td>`;}).join("")}</tr>`).join("")}</tbody>`;
   const got=ACH.filter(a=>stats.ach[a.id]).length,fresh=new Set(freshAch);
   $("ach-title").textContent=`Kitüntetések · ${got}/${ACH.length}`;
@@ -3240,6 +3317,238 @@ function duelSheet(){
   $("du-close").onclick=closeSheet;
 }
 
+/* ---------- sudoku ---------- */
+const SDK_GIVENS={1:40,2:32,3:26},SDK_HUE=205;
+let SG=null,sSel=-1,sNotes=false,sCells=[],sResT=null;
+const sRC=i=>[Math.floor(i/9),i%9];
+const sBox=i=>{const [r,c]=sRC(i);return Math.floor(r/3)*3+Math.floor(c/3);};
+const SPEERS=Array.from({length:81},(_,i)=>{const [r,c]=sRC(i),b=sBox(i),o=[];for(let j=0;j<81;j++){if(j===i)continue;const [r2,c2]=sRC(j);if(r2===r||c2===c||sBox(j)===b)o.push(j);}return o;});
+const SUNITS=[...Array(9).keys()].flatMap(k=>[
+  {id:"r"+k,cells:[...Array(9).keys()].map(c=>k*9+c)},
+  {id:"c"+k,cells:[...Array(9).keys()].map(r=>r*9+k)},
+  {id:"b"+k,cells:[...Array(81).keys()].filter(i=>sBox(i)===k)}
+]);
+const popc=m=>{let n=0;while(m){m&=m-1;n++;}return n;};
+function sdkCands(g,i){let m=0;for(const j of SPEERS[i])if(g[j])m|=1<<g[j];return (~m)&0x3FE;}
+// counts solutions up to `limit` (used to keep the puzzle uniquely solvable)
+function sdkCount(g,limit){
+  let best=-1,bm=0,bn=10;
+  for(let i=0;i<81;i++)if(!g[i]){const m=sdkCands(g,i),n=popc(m);if(!n)return 0;if(n<bn){bn=n;best=i;bm=m;if(n===1)break;}}
+  if(best<0)return 1;
+  let cnt=0;
+  for(let d=1;d<=9&&cnt<limit;d++)if(bm&(1<<d)){g[best]=d;cnt+=sdkCount(g,limit-cnt);g[best]=0;}
+  return cnt;
+}
+function sdkFill(g,rng){
+  let best=-1,bm=0,bn=10;
+  for(let i=0;i<81;i++)if(!g[i]){const m=sdkCands(g,i),n=popc(m);if(!n)return false;if(n<bn){bn=n;best=i;bm=m;}}
+  if(best<0)return true;
+  for(const d of shuffle([1,2,3,4,5,6,7,8,9].filter(d=>bm&(1<<d)),rng)){g[best]=d;if(sdkFill(g,rng))return true;}
+  g[best]=0;return false;
+}
+function sdkGenerate(lvl,rng){
+  rng=rng||Math.random;
+  const sol=Array(81).fill(0);sdkFill(sol,rng);
+  const puz=sol.slice();let givens=81;
+  for(const i of shuffle([...Array(81).keys()],rng)){
+    if(givens<=SDK_GIVENS[lvl])break;
+    const v=puz[i];puz[i]=0;
+    if(sdkCount(puz.slice(),2)!==1)puz[i]=v;else givens--;
+  }
+  return {puz,sol};
+}
+function saveSdk(){if(!SG)return;if(SG.done){store.del("sudoku");return;}SG.sel=sSel;store.set("sudoku",SG);}
+function newSudoku(lvl){
+  const {puz,sol}=sdkGenerate(lvl);
+  openSudoku({lvl,puz,sol,vals:puz.slice(),notes:Array(81).fill(0),ms:0,hints:0,done:false,rev:{},wrong:{},units:{}});
+  saveSdk();
+}
+function openSudoku(sg){
+  SG=sg;SG.units=SG.units||{};sSel=typeof SG.sel==="number"?SG.sel:-1;sNotes=false;
+  $("sudoku").style.setProperty("--h",SDK_HUE);$("overlay").style.setProperty("--h",SDK_HUE);
+  $("sudoku").dataset.skin=stats.equip.skin;$("sudoku").dataset.font=stats.equip.font;
+  show("sudoku");closeSheet();sfx.wake();
+  sLevelLine();buildSdk();paintSdk();sizeSdk();$("s-clock").textContent=fmt(SG.ms);updateCoins();
+}
+function sLevelLine(){const t=$("s-sub");t.classList.remove("res");t.textContent=`${LEVELS[SG.lvl].name} · ${SG.puz.filter(Boolean).length} adott szám`;}
+function buildSdk(){
+  const b=$("s-board");b.innerHTML="";sCells=[];
+  for(let i=0;i<81;i++){
+    const [r,c]=sRC(i),d=document.createElement("div");
+    d.className="sc"+(c===2||c===5?" br":"")+(r===2||r===5?" bb":"");
+    d.innerHTML='<span class="sv"></span><span class="sn"></span>';
+    d.addEventListener("click",()=>{sSel=i;paintSdk();});
+    b.appendChild(d);sCells.push(d);
+  }
+  const pad=$("s-pad");pad.innerHTML="";
+  for(let d=1;d<=9;d++){
+    const k=document.createElement("button");k.type="button";k.dataset.d=d;k.innerHTML=`${d}<small></small>`;
+    k.addEventListener("pointerdown",e=>{e.preventDefault();sdkInput(d);});
+    k.addEventListener("click",e=>{if(e.detail===0)sdkInput(d);});
+    pad.appendChild(k);
+  }
+}
+function sizeSdk(){
+  if(screen!=="sudoku")return;
+  const w=$("s-wrap"),s=Math.floor(Math.min(w.clientWidth-16,w.clientHeight-16,560));
+  $("s-board").style.setProperty("--sb",Math.max(180,s)+"px");
+}
+function paintSdk(){
+  const v=SG.vals,selv=sSel>=0?v[sSel]:0,peers=new Set(sSel>=0?SPEERS[sSel]:[]);
+  const conf=new Set();
+  for(let i=0;i<81;i++)if(v[i])for(const j of SPEERS[i])if(v[j]===v[i]){conf.add(i);break;}
+  for(let i=0;i<81;i++){
+    const el=sCells[i],cl=el.classList;
+    cl.toggle("given",!!SG.puz[i]);cl.toggle("sel",i===sSel);cl.toggle("peer",peers.has(i));
+    cl.toggle("same",!!selv&&v[i]===selv&&i!==sSel);cl.toggle("conf",conf.has(i)&&!SG.puz[i]);
+    cl.toggle("wrong",!!SG.wrong[i]);cl.toggle("rev",!!SG.rev[i]);
+    el.firstChild.textContent=v[i]||"";
+    const n=SG.notes[i];
+    el.lastChild.innerHTML=!v[i]&&n?[1,2,3,4,5,6,7,8,9].map(d=>`<i>${n&(1<<d)?d:""}</i>`).join(""):"";
+  }
+  const cnt=Array(10).fill(0);v.forEach(x=>{if(x)cnt[x]++;});
+  $("s-pad").querySelectorAll("button").forEach(b=>{const d=+b.dataset.d,left=9-cnt[d];b.querySelector("small").textContent=left>0?left:"";b.classList.toggle("full",left<=0);});
+  $("s-pad").classList.toggle("notes",sNotes);
+  $("s-notes").classList.toggle("on",sNotes);$("s-notes").querySelector(".pu-p").textContent=sNotes?"BE":"KI";
+  $("s-hint").querySelector(".pu-p").innerHTML=`${PENCIL}${PRICE.letter}`;
+  $("s-prog").style.width=Math.round(v.filter(Boolean).length/81*100)+"%";
+}
+function sdkUnits(i){
+  // each row, column or box filled in correctly for the first time is worth a pencil
+  const got=SUNITS.filter(u=>u.cells.includes(i)&&!SG.units[u.id]&&u.cells.every(j=>SG.vals[j]===SG.sol[j]));
+  if(!got.length)return;
+  got.forEach((u,k)=>{
+    SG.units[u.id]=1;
+    if(!REDUCED)u.cells.forEach((j,n)=>{const el=sCells[j];el.classList.remove("won");void el.offsetWidth;el.style.animationDelay=(k*120+n*35)+"ms";el.classList.add("won");});
+  });
+  grant(got.length);saveStats();updateCoins(false);
+  const c=$("s-coins");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");
+  sfx.word();haptic(18);
+  chalEvent({type:"words",n:got.length});
+}
+function sdkInput(d){
+  if(!SG||SG.done||sSel<0)return;
+  const i=sSel;if(SG.puz[i]||SG.rev[i])return;
+  if(sNotes){if(SG.vals[i])return;SG.notes[i]^=(1<<d);sfx.key();}
+  else{
+    SG.vals[i]=SG.vals[i]===d?0:d;SG.notes[i]=0;delete SG.wrong[i];sfx.key();haptic(8);
+    if(SG.vals[i]){
+      for(const j of SPEERS[i])SG.notes[j]&=~(1<<d);
+      if(SPEERS[i].some(j=>SG.vals[j]===d)){sfx.bad();haptic([30,30,30]);}
+      else if(d===SG.sol[i])sdkUnits(i);
+    }
+  }
+  afterSdk();
+}
+function afterSdk(){paintSdk();if(!SG.done&&SG.vals.every((x,i)=>x===SG.sol[i]))sdkFinish(false);else saveSdk();}
+function sdkErase(){const i=sSel;if(i<0||SG.done||SG.puz[i]||SG.rev[i])return;SG.vals[i]=0;SG.notes[i]=0;delete SG.wrong[i];sfx.del();afterSdk();}
+function sdkHint(){
+  if(SG.done)return;
+  let i=sSel;
+  if(i<0||SG.puz[i]||SG.rev[i]||SG.vals[i]===SG.sol[i]){
+    const open=[...Array(81).keys()].filter(j=>SG.vals[j]!==SG.sol[j]);if(!open.length)return;
+    i=open[Math.floor(Math.random()*open.length)];
+  }
+  if(stats.coins<PRICE.letter){noCoinsSheet(PRICE.letter);return;}
+  stats.coins-=PRICE.letter;stats.spent+=PRICE.letter;stats.hints++;saveStats();updateCoins();
+  const c=$("s-coins");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");
+  SG.vals[i]=SG.sol[i];SG.notes[i]=0;SG.rev[i]=1;delete SG.wrong[i];SG.hints++;sSel=i;
+  for(const j of SPEERS[i])SG.notes[j]&=~(1<<SG.sol[i]);
+  sfx.coin();afterSdk();
+}
+function sdkCheck(){
+  if(SG.done)return;
+  let bad=0,em=0,ok=0;SG.wrong={};
+  for(let i=0;i<81;i++){if(!SG.vals[i])em++;else if(SG.vals[i]!==SG.sol[i]){SG.wrong[i]=1;bad++;}else if(!SG.puz[i])ok++;}
+  paintSdk();
+  if(bad){sfx.bad();haptic([40,30,40]);if(!REDUCED)Object.keys(SG.wrong).forEach(i=>{const el=sCells[i];el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");});}
+  else sfx.word();
+  const t=$("s-sub");t.innerHTML=`<span class="pill ok">${ok} jó</span><span class="pill no">${bad} hibás</span><span class="pill em">${em} üres</span>`;t.classList.add("res");
+  clearTimeout(sResT);sResT=setTimeout(sLevelLine,4500);saveSdk();
+}
+function sdkFinish(gaveUp){
+  SG.done=true;
+  const stars=gaveUp?0:SG.hints===0?3:SG.hints<=2?2:1,before=rankOf(stats.stars),rewards=[];
+  if(!gaveUp){
+    const k="sudoku|"+SG.lvl,st=stats.by[k]||{solved:0,best:0};
+    st.solved++;st.best=Math.max(st.best,stars);st.bestMs=st.bestMs?Math.min(st.bestMs,SG.ms):SG.ms;stats.by[k]=st;
+    stats.stars+=stars;stats.solved++;stats.sudoku=(stats.sudoku||0)+1;if(!SG.hints)stats.clean++;
+    rewards.push(["Megfejtés",REWARD[SG.lvl]]);if(stars)rewards.push([`${stars} csillag`,stars*2]);
+  }
+  const total=rewards.reduce((a,r)=>a+r[1],0);if(total)grant(total);
+  saveStats();updateCoins();store.del("sudoku");
+  if(!gaveUp)chalEvent({type:"solve",topic:"sudoku",lvl:SG.lvl,mode:"sudoku",hints:SG.hints,ms:SG.ms,stars});
+  const after=rankOf(stats.stars);sSel=-1;paintSdk();
+  if(!gaveUp){
+    sfx.win();haptic([30,50,30,50,60]);
+    if(!REDUCED)sCells.forEach((el,i)=>{const [r,c]=sRC(i);el.classList.remove("won","wave");void el.offsetWidth;el.style.animationDelay=((r+c)*40)+"ms";el.classList.add("wave");});
+    setTimeout(()=>confetti(SDK_HUE),350);
+  }
+  setTimeout(()=>{
+    const rows=rewards.map(([n,v])=>`<div class="rw-row"><span>${esc(n)}</span><b>+${v} ${PENCIL}</b></div>`).join("");
+    openSheet("sdkwin",gaveUp?`<h2>Itt a megoldás</h2><p>Nézd át nyugodtan. Legközelebb biztosan megy!</p><div class="btns"><button type="button" class="btn primary" id="sw-new">Új szudoku</button><button type="button" class="btn" id="sw-grid">Megnézem</button><button type="button" class="btn" id="sw-home">Vissza a menübe</button></div>`
+      :`<div class="win-stars" aria-label="${stars} csillag">${[0,1,2].map(i=>`<span class="${i<stars?"on":""}">★</span>`).join("")}</div>
+      <h2>Kész a szudoku!</h2><p>${fmt(SG.ms)} alatt, ${SG.hints?SG.hints+" segítséggel":"segítség nélkül"}.${stars<3?" Három csillag segítség nélkül jár.":""}</p>
+      <div class="panel">${rows}<div class="rw-row total"><span>Most kapsz</span><b>+${total} ${PENCIL}</b></div></div>
+      <p class="win-rank">${after>before?`Szintet léptél! Szint ${after+1} · ${RANKS[after][1]}`:`Összesen ${stats.stars} csillag · ${stats.coins} ceruza`}</p>
+      <div class="btns"><button type="button" class="btn yellow" id="sw-share">Eredmény megosztása</button><button type="button" class="btn primary" id="sw-new">Új szudoku</button><button type="button" class="btn" id="sw-grid">Megnézem a rácsot</button><button type="button" class="btn" id="sw-home">Vissza a menübe</button></div>`);
+    const lvl=SG.lvl;
+    $("sw-new").onclick=()=>{closeSheet();newSudoku(lvl);};
+    $("sw-grid").onclick=closeSheet;
+    $("sw-home").onclick=()=>{closeSheet();show("home");renderHome();};
+    const sh=$("sw-share");if(sh)sh.onclick=()=>shareResult(`Rejtvényfüzet – Szudoku · ${LEVELS[lvl].name}\n${"★".repeat(stars)}${"☆".repeat(3-stars)} · ${fmt(SG.ms)} · ${SG.hints?SG.hints+" segítség":"segítség nélkül"}\n${PUBLIC_URL}`);
+    if(!gaveUp&&!REDUCED)[0,1,2].forEach(i=>{if(i<stars)setTimeout(()=>sfx.star(i),i*250+150);});
+    checkAch();
+  },gaveUp?0:1100);
+}
+function sudokuSheet(){
+  const saved=store.get("sudoku",null),cont=saved&&!saved.done&&saved.sol;
+  const pct=cont?Math.round(saved.vals.filter((v,i)=>v&&!saved.puz[i]).length/Math.max(1,saved.puz.filter(x=>!x).length)*100):0;
+  openSheet("sdk",`<h2>Szudoku</h2><p>Töltsd ki a rácsot úgy, hogy minden sorban, oszlopban és 3×3-as négyzetben az 1–9 számok mind egyszer szerepeljenek.</p>
+  <div class="btns">${cont?`<button type="button" class="btn yellow" id="sd-cont">Folytatás · ${LEVELS[saved.lvl].name} · ${pct}% · ${fmt(saved.ms)}</button>`:""}
+  ${[1,2,3].map(l=>{const s=stats.by["sudoku|"+l]||{best:0};return `<button type="button" class="btn row" data-l="${l}">${LEVELS[l].name} · ${SDK_GIVENS[l]} adott szám <em>${starsHtml(s.best)}</em></button>`;}).join("")}
+  <button type="button" class="btn" id="sd-close">Mégse</button></div>`);
+  if(cont)$("sd-cont").onclick=()=>openSudoku(saved);
+  document.querySelectorAll("#sheet [data-l]").forEach(b=>b.onclick=()=>{
+    const l=+b.dataset.l;
+    if(cont&&saved.vals.some((v,i)=>v&&!saved.puz[i]))confirmSheet("Félbehagyott szudokud van","Ha újat kezdesz, a mostani állás elvész.","Új szudoku",()=>newSudoku(l));
+    else{closeSheet();newSudoku(l);}
+  });
+  $("sd-close").onclick=closeSheet;
+}
+function sdkMenu(){
+  openSheet("sdkmenu",`<h2>Szudoku</h2>
+  <div class="menu-row"><label for="sm-snd">Hangok</label><span class="switch"><input type="checkbox" id="sm-snd" ${prefs.sound?"checked":""}><span></span></span></div>
+  <div class="btns"><button type="button" class="btn" id="sm-new">Új szudoku</button>
+  <button type="button" class="btn warn" id="sm-solve" ${SG.done?"disabled":""}>Megoldás megmutatása (nincs jutalom)</button>
+  <button type="button" class="btn" id="sm-home">Vissza a menübe</button><button type="button" class="btn primary" id="sm-close">Folytatom</button></div>`);
+  $("sm-snd").onchange=e=>{prefs.sound=e.target.checked;savePrefs();};
+  $("sm-new").onclick=()=>confirmSheet("Új szudokut kezdesz?","A mostani állás elvész.","Új szudoku",()=>newSudoku(SG.lvl));
+  $("sm-solve").onclick=()=>confirmSheet("Megnézed a megoldást?","Ezért a szudokuért nem jár csillag vagy ceruza.","Megoldás",()=>{for(let i=0;i<81;i++)if(SG.vals[i]!==SG.sol[i]){SG.vals[i]=SG.sol[i];SG.rev[i]=1;}SG.wrong={};sdkFinish(true);});
+  $("sm-home").onclick=()=>{closeSheet();saveSdk();show("home");renderHome();};
+  $("sm-close").onclick=closeSheet;
+}
+$("s-back").onclick=()=>{saveSdk();show("home");renderHome();};
+$("s-more").onclick=sdkMenu;
+$("s-erase").onclick=sdkErase;
+$("s-notes").onclick=()=>{sNotes=!sNotes;paintSdk();haptic(8);};
+$("s-hint").onclick=sdkHint;
+$("s-check").onclick=sdkCheck;
+document.addEventListener("keydown",e=>{
+  if(screen!=="sudoku"||!SG)return;
+  if(sheetKind){if(e.key==="Escape")closeSheet();return;}
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key;
+  if((k==="Enter"||k===" ")&&e.target.closest&&e.target.closest("button,input"))return;
+  if(/^[1-9]$/.test(k)){e.preventDefault();if(sSel<0)sSel=0;sdkInput(+k);return;}
+  if(k==="Backspace"||k==="Delete"||k==="0"){e.preventDefault();sdkErase();return;}
+  if(k==="n"||k==="N"){sNotes=!sNotes;paintSdk();return;}
+  const mv={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[k];
+  if(mv){e.preventDefault();const [r,c]=sSel<0?[0,0]:sRC(sSel);sSel=((r+mv[0]+9)%9)*9+((c+mv[1]+9)%9);paintSdk();}
+  if(k==="Escape"){saveSdk();show("home");renderHome();}
+});
+if(window.ResizeObserver)new ResizeObserver(sizeSdk).observe($("s-wrap"));
+
 /* ---------- on-screen keyboard ---------- */
 const ROWS=[["Á","É","Í","Ó","Ö","Ő","Ú","Ü","Ű"],["Q","W","E","R","T","Z","U","I","O","P"],["A","S","D","F","G","H","J","K","L"],["Y","X","C","V","B","N","M","⌫"]];
 (function buildKbd(){
@@ -3290,9 +3599,10 @@ setInterval(()=>{
     if(isTrial()&&!sheetKind){G.trial.left-=dt;if(G.trial.left<=0){G.trial.left=0;tickClock();endTrial(false);return;}}
     tickClock();if(++tickN%5===0)saveGame();
   }
+  if(screen==="sudoku"&&SG&&!SG.done&&!document.hidden){SG.ms+=dt;$("s-clock").textContent=fmt(SG.ms);if(++tickN%5===0)saveSdk();}
 },1000);
-document.addEventListener("visibilitychange",()=>{last=Date.now();if(document.hidden)saveGame();else if(screen==="home")renderHome();});
-window.addEventListener("pagehide",saveGame);
+document.addEventListener("visibilitychange",()=>{last=Date.now();if(document.hidden){saveGame();saveSdk();}else if(screen==="home")renderHome();});
+window.addEventListener("pagehide",()=>{saveGame();saveSdk();});
 
 /* ---------- wiring ---------- */
 $("g-back").onclick=leaveGame;
@@ -3308,12 +3618,13 @@ $("wheel-card").onclick=wheelSheet;
 $("mode-sved").onclick=svedSheet;
 $("mode-trial").onclick=()=>startGame({mode:"trial",topic:"trial",lvl:2});
 $("mode-duel").onclick=duelSheet;
+$("mode-sudoku").onclick=sudokuSheet;
 $("pref-big").onchange=e=>{prefs.big=e.target.checked;savePrefs();document.body.classList.toggle("big",prefs.big);};
 $("pref-sound").onchange=e=>{prefs.sound=e.target.checked;savePrefs();if(prefs.sound)sfx.word();};
 $("pref-haptic").onchange=e=>{prefs.haptic=e.target.checked;savePrefs();haptic(30);};
 $("pref-name").oninput=e=>{prefs.name=e.target.value.slice(0,16);savePrefs();renderProfile();};
 document.querySelectorAll("#theme-seg button").forEach(b=>b.onclick=()=>{prefs.theme=b.dataset.v;savePrefs();applyTheme(true);syncThemeColor();renderHome();});
-window.addEventListener("resize",setLayout);
+window.addEventListener("resize",()=>{setLayout();sizeSdk();});
 if(window.ResizeObserver)new ResizeObserver(sizeGrid).observe($("gridarea"));
 
 document.body.classList.toggle("big",!!prefs.big);
